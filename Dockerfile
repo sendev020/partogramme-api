@@ -1,37 +1,34 @@
-FROM php:8.2-cli
+FROM php:8.2-fpm
 
-# Dépendances système + extensions PHP
+# Dépendances système
 RUN apt-get update && apt-get install -y \
-    git unzip libzip-dev libpq-dev \
-    libpng-dev libjpeg-dev libfreetype6-dev \
-    && docker-php-ext-install pdo pdo_pgsql zip gd bcmath
+    git \
+    unzip \
+    libzip-dev \
+    libpq-dev \
+    && docker-php-ext-install pdo pdo_pgsql zip
 
 # Installer Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Variables Laravel requises
-ENV APP_ENV=production
-ENV APP_KEY=base64:koPrU4yn+df3JMpnH5puQM5wUQOx4fQcPkIiNFUT37o=
+# Dossier de travail
+WORKDIR /var/www/html
 
-WORKDIR /app
-
-# Copier fichiers composer
-COPY composer.json composer.lock ./
-
-# Installer dépendances
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Copier le reste du projet
+# Copier le projet
 COPY . .
 
-# Créer .env si absent
-RUN cp .env.example .env || true
+# Installer dépendances Laravel
+RUN composer install --no-dev --optimize-autoloader
 
-# Permissions
-RUN chmod -R 775 storage bootstrap/cache
+# Permissions Laravel
+RUN chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
+# Port Render
 EXPOSE 10000
 
+# Lancer Laravel
 CMD php artisan migrate --force \
-&& php artisan db:seed --force \
-&& php artisan serve --host=0.0.0.0 --port=$PORT
+    && artisan db:seed --force \
+    && php artisan serve --host=0.0.0.0 --port=$PORT
+
