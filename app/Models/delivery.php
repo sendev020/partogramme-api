@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class delivery extends Model
+class Delivery extends Model
 {
     protected $fillable = [
         'labour_id',
