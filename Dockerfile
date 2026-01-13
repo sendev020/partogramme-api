@@ -1,4 +1,4 @@
-FROM php:8.2-fpm
+FROM php:8.2-cli
 
 # Dépendances système
 RUN apt-get update && apt-get install -y \
@@ -12,23 +12,24 @@ RUN apt-get update && apt-get install -y \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Dossier de travail
-WORKDIR /var/www/html
+WORKDIR /app
 
-# Copier le projet
-COPY . .
+# Copier les fichiers composer d'abord (cache Docker)
+COPY composer.json composer.lock ./
 
 # Installer dépendances Laravel
 RUN composer install --no-dev --optimize-autoloader
 
+# Copier le reste du projet
+COPY . .
+
 # Permissions Laravel
-RUN chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
+RUN chmod -R 775 storage bootstrap/cache
 
-# Port Render
-EXPOSE 8000
+# Render injecte le port
+EXPOSE 10000
 
-# Lancer Laravel
+# Commande de démarrage Render
 CMD php artisan migrate --force \
-    artisan db:seed --force \
-    && php artisan serve --host=0.0.0.0 --port=$PORT
-
+ && php artisan db:seed --force \
+ && php artisan serve --host=0.0.0.0 --port=$PORT
