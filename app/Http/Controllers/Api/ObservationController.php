@@ -1,0 +1,158 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Observation;
+use Illuminate\Http\Request;
+
+class ObservationController extends Controller
+{
+    public function index($labourId)
+    {
+        $labour = \App\Models\Labour::find($labourId);
+
+        if (! $labour) {
+            return response()->json(['message' => 'Accouchement non trouvé'], 404);
+        }
+
+        $observations = $labour->observations()
+            ->orderBy('observed_at', 'desc')
+            ->get();
+
+        return response()->json(['observations' => $observations]);
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'local_id' => 'nullable|integer',
+            'labour_id' => 'required|exists:labours,id',
+
+            'dilation' => 'nullable|numeric|min:0|max:10',
+            'contractions' => 'nullable|integer|min:0',
+            'fcf' => 'nullable|integer|min:60|max:220',
+            'station' => 'nullable|integer|min:-3|max:3',
+
+            'systolic_bp' => 'nullable|integer',
+            'diastolic_bp' => 'nullable|integer',
+            'temperature' => 'nullable|numeric',
+            'pulse' => 'nullable|integer',
+
+            'notes' => 'nullable|string',
+            'observed_at' => 'nullable|date',
+            'updated_at' => 'nullable|date',
+        ]);
+
+        $observation = Observation::create([
+            'labour_id' => $data['labour_id'],
+            'dilation' => $data['dilation'] ?? null,
+            'contractions' => $data['contractions'] ?? null,
+            'fcf' => $data['fcf'] ?? null,
+            'station' => $data['station'] ?? null,
+
+            'systolic_bp' => $data['systolic_bp'] ?? null,
+            'diastolic_bp' => $data['diastolic_bp'] ?? null,
+            'temperature' => $data['temperature'] ?? null,
+            'pulse' => $data['pulse'] ?? null,
+
+            'notes' => $data['notes'] ?? null,
+            'observed_at' => $data['observed_at'] ?? now(),
+
+            'synced' => true,
+        ]);
+        // ✅ APPEL DE LA FONCTION D'ALERTES
+        $this->checkAlerts($observation);
+
+        return response()->json([
+            'message' => 'Observation enregistrée',
+            'server_id' => $observation->id,
+            'local_id' => $data['local_id'] ?? null,
+        ], 201);
+    }
+
+    private function checkAlerts($observation)
+    {
+        $alerts = [];
+
+        // --- FCF ---
+        if ($observation->fcf < 120 || $observation->fcf > 160) {
+            $alerts[] = [
+                'labour_id' => $observation->labour_id,
+                'level' => 'rouge',
+                'message' => 'Anomalie du rythme cardiaque fœtal (FCF)',
+            ];
+        }
+
+        // --- Dilatation trop lente ou trop rapide ---
+        if ($observation->dilation < 1) {
+            $alerts[] = [
+                'labour_id' => $observation->labour_id,
+                'level' => 'orange',
+                'message' => 'Dilatation faible',
+            ];
+        }
+
+        // --- Température maternelle ---
+        if ($observation->temperature != null &&
+            ($observation->temperature < 36 || $observation->temperature > 38)) {
+            $alerts[] = [
+                'labour_id' => $observation->labour_id,
+                'level' => 'orange',
+                'message' => 'Température anormale',
+            ];
+        }
+
+        // --- Tension artérielle ---
+        if ($observation->systolic_bp >= 140 || $observation->diastolic_bp >= 90) {
+            $alerts[] = [
+                'labour_id' => $observation->labour_id,
+                'level' => 'orange',
+                'message' => 'Hypertension maternelle',
+            ];
+        }
+
+        // --- Station anormale ---
+        if ($observation->station != null && ($observation->station < -3 || $observation->station > 3)) {
+            $alerts[] = [
+                'labour_id' => $observation->labour_id,
+                'level' => 'orange',
+                'message' => 'Station anormale',
+            ];
+        }
+
+        foreach ($alerts as $alert) {
+            \App\Models\Alert::create($alert);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        $obs = Observation::findOrFail($id);
+
+        $request->validate([
+            'dilation' => 'nullable|numeric',
+            'fcf' => 'nullable|integer',
+            'contractions' => 'nullable|integer',
+            'station' => 'nullable|integer',
+            'systolic_bp' => 'nullable|integer',
+            'diastolic_bp' => 'nullable|integer',
+            'temperature' => 'nullable|numeric',
+            'pulse' => 'nullable|integer',
+            'observed_at' => 'nullable|date',
+            'notes' => 'nullable|string',
+        ]);
+
+        $obs->update($request->all());
+
+        return response()->json($obs);
+    }
+
+    public function sync(Request $request)
+    {
+        $since = $request->query('since');
+
+        return Observation::where('updated_at', '>', $since)
+            ->get();
+    }
+}
