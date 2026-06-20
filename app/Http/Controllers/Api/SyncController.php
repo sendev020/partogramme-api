@@ -2,16 +2,37 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Labour;
 use App\Models\Observation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class SyncController extends Controller
 {
     public function syncObservations(Request $request)
     {
+         /** @var User|null $user */
+        $user = Auth::user();
         $results = [];
 
         foreach ($request->observations as $obs) {
+            // ✅ Vérifier que le labour cible appartient bien à l'utilisateur (ou est visible)
+            $labourQuery = Labour::where('id', $obs['labour_server_id']);
+
+            if ($user->isSuperviseur()) {
+                $labourQuery->where('district', $user->district);
+            } elseif (! $user->isAdmin()) {
+                $labourQuery->where('user_id', $user->id);
+            }
+
+            $labour = $labourQuery->first();
+
+            if (! $labour) {
+                // ⛔ Ignorer silencieusement les observations dont le labour n'est pas autorisé
+                continue;
+            }
+
             $record = Observation::updateOrCreate(
                 ['id' => $obs['server_id'] ?? null],
                 [

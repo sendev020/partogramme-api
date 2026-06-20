@@ -11,13 +11,11 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        // Validation
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
-        // Vérification utilisateur
         $user = User::where('email', $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
@@ -26,17 +24,17 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Restriction rôle
-        if ($user->role !== 'sage_femme') {
+        // ✅ Bloquer seulement les comptes désactivés (plus de restriction de rôle)
+        if (! $user->is_active) {
             return response()->json([
-                'message' => 'Accès non autorisé',
+                'message' => 'Compte désactivé, contactez votre administrateur',
             ], 403);
         }
 
-        // Supprimer anciens tokens (recommandé)
         $user->tokens()->delete();
+        $user->last_login_at = now();
+        $user->save();
 
-        // Générer token
         $token = $user->createToken('flutter-mobile')->plainTextToken;
 
         return response()->json([
@@ -46,6 +44,8 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $user->role,
+                'district' => $user->district, // ✅ nécessaire côté Flutter pour l'affichage/logique locale
+                'poste_de_sante' => $user->poste_de_sante, // ✅ nécessaire côté Flutter pour l'affichage/logique locale
             ],
         ]);
     }

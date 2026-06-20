@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Labour extends Model
 {
     protected $fillable = [
-        'patient_id', 'user_id', 'start_time', 'end_time', 'status',
+        'patient_id', 'user_id', 'district', 'poste_de_sante', 'start_time', 'end_time', 'status', 'synced', 'server_id',
     ];
 
     public function patient()
@@ -40,4 +40,8 @@ class Labour extends Model
         return $this->hasOne(Delivery::class);
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

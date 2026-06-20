@@ -3,14 +3,36 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Labour;
 use App\Models\Observation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class ObservationController extends Controller
 {
+    /**
+     * ✅ Vérifie que le labour est visible par l'utilisateur connecté
+     * et le retourne, ou null si non autorisé / inexistant.
+     */
+    private function visibleLabour($labourId)
+    {
+         /** @var User|null $user */
+        $user = Auth::user();
+        $query = Labour::where('id', $labourId);
+
+        if ($user->isSuperviseur()) {
+            $query->where('district', $user->district);
+        } elseif (! $user->isAdmin()) {
+            $query->where('user_id', $user->id);
+        }
+
+        return $query->first();
+    }
+
     public function index($labourId)
     {
-        $labour = \App\Models\Labour::find($labourId);
+        $labour = $this->visibleLabour($labourId);
 
         if (! $labour) {
             return response()->json(['message' => 'Accouchement non trouvé'], 404);
@@ -44,6 +66,12 @@ class ObservationController extends Controller
             'updated_at' => 'nullable|date',
         ]);
 
+        // ✅ Vérifier que l'utilisateur a le droit d'ajouter une observation à ce labour
+        $labour = $this->visibleLabour($data['labour_id']);
+        if (! $labour) {
+            return response()->json(['message' => 'Accouchement non trouvé ou non autorisé'], 403);
+        }
+
         $observation = Observation::create([
             'labour_id' => $data['labour_id'],
             'dilation' => $data['dilation'] ?? null,
@@ -61,7 +89,7 @@ class ObservationController extends Controller
 
             'synced' => true,
         ]);
-        // ✅ APPEL DE LA FONCTION D'ALERTES
+
         $this->checkAlerts($observation);
 
         return response()->json([
@@ -75,7 +103,6 @@ class ObservationController extends Controller
     {
         $alerts = [];
 
-        // --- FCF ---
         if ($observation->fcf < 120 || $observation->fcf > 160) {
             $alerts[] = [
                 'labour_id' => $observation->labour_id,
@@ -84,7 +111,6 @@ class ObservationController extends Controller
             ];
         }
 
-        // --- Dilatation trop lente ou trop rapide ---
         if ($observation->dilation < 1) {
             $alerts[] = [
                 'labour_id' => $observation->labour_id,
@@ -93,7 +119,6 @@ class ObservationController extends Controller
             ];
         }
 
-        // --- Température maternelle ---
         if ($observation->temperature != null &&
             ($observation->temperature < 36 || $observation->temperature > 38)) {
             $alerts[] = [
@@ -103,7 +128,6 @@ class ObservationController extends Controller
             ];
         }
 
-        // --- Tension artérielle ---
         if ($observation->systolic_bp >= 140 || $observation->diastolic_bp >= 90) {
             $alerts[] = [
                 'labour_id' => $observation->labour_id,
@@ -112,7 +136,6 @@ class ObservationController extends Controller
             ];
         }
 
-        // --- Station anormale ---
         if ($observation->station != null && ($observation->station < -3 || $observation->station > 3)) {
             $alerts[] = [
                 'labour_id' => $observation->labour_id,
@@ -129,6 +152,12 @@ class ObservationController extends Controller
     public function update(Request $request, $id)
     {
         $obs = Observation::findOrFail($id);
+
+        // ✅ Vérifier que le labour parent est visible par l'utilisateur
+        $labour = $this->visibleLabour($obs->labour_id);
+        if (! $labour) {
+            return response()->json(['message' => 'Non autorisé'], 403);
+        }
 
         $request->validate([
             'dilation' => 'nullable|numeric',
@@ -151,8 +180,22 @@ class ObservationController extends Controller
     public function sync(Request $request)
     {
         $since = $request->query('since');
+        /** @var User|null $user */
+        $user = Auth::user();
 
-        return Observation::where('updated_at', '>', $since)
-            ->get();
+        $query = Observation::where('updated_at', '>', $since);
+
+        // ✅ Filtrer via le labour parent selon le rôle
+        if ($user->isSuperviseur()) {
+            $query->whereHas('labour', function ($q) use ($user) {
+                $q->where('district', $user->district);
+            });
+        } elseif (! $user->isAdmin()) {
+            $query->whereHas('labour', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
+        }
+
+        return $query->get();
     }
 }

@@ -3,15 +3,29 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Referral;
 use App\Models\Labour;
+use App\Models\Referral;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class ReferralController extends Controller
 {
-    /**
-     * Enregistrer une référence et mettre le labour à "refere"
-     */
+    private function visibleLabour($labourId)
+    {
+         /** @var User|null $user */
+        $user = Auth::user();
+        $query = Labour::where('id', $labourId);
+
+        if ($user->isSuperviseur()) {
+            $query->where('district', $user->district);
+        } elseif (! $user->isAdmin()) {
+            $query->where('user_id', $user->id);
+        }
+
+        return $query->first();
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -22,11 +36,14 @@ class ReferralController extends Controller
             'transport_mode' => 'required|string|max:50',
         ]);
 
-        // 1️⃣ Création de la référence
+        // ✅ Vérifier que l'utilisateur a le droit d'agir sur ce labour
+        $labour = $this->visibleLabour($validated['labour_id']);
+        if (! $labour) {
+            return response()->json(['message' => 'Accouchement non trouvé ou non autorisé'], 403);
+        }
+
         $referral = Referral::create($validated);
 
-        // 2️⃣ Mise à jour du statut du labour
-        $labour = Labour::findOrFail($validated['labour_id']);
         $labour->status = 'refere';
         $labour->save();
 

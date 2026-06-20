@@ -16,10 +16,41 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'district',
+        'poste_de_sante',
+        'phone',
+        'is_active',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
     ];
+
+    // ✅ Relations
+    public function patients()
+    {
+        return $this->hasMany(Patient::class);
+    }
+
+    public function labours()
+    {
+        return $this->hasMany(Labour::class);
+    }
+
+    // ✅ Helpers de rôle
+    public function isSageFemme(): bool
+    {
+        return $this->role === 'sage_femme';
+    }
+
+    public function isSuperviseur(): bool
+    {
+        return $this->role === 'superviseur';
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
 }

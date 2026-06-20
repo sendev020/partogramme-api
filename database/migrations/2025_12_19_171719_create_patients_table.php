@@ -9,9 +9,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('patients', function (Blueprint $table) {
-            $table->id(); // MySQL ID
+            $table->id(); // ✅ doit être en premier
+
             // 🔁 Synchronisation
             $table->unsignedBigInteger('server_id')->nullable()->unique();
+
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+
+            $table->enum('district', [
+                'sedhiou',
+                'goudomp',
+                'bounkiling',
+            ]);
+
+            $table->string('poste_de_sante')->nullable();
 
             $table->integer('age');
             $table->string('name');
@@ -23,7 +34,6 @@ return new class extends Migration
 
             $table->timestamps();
         });
-
     }
 
     public function down(): void

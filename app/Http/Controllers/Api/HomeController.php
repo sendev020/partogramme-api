@@ -4,13 +4,27 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Labour;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class HomeController extends Controller
 {
     public function homeData()
     {
-        $ongoing_births = Labour::where('status', 'en cours')->count();
-        $recent_births = Labour::orderBy('created_at', 'desc')->take(5)->get();
+         /** @var User|null $user */
+        $user = Auth::user();
+
+        $query = Labour::query();
+
+        if ($user->isSuperviseur()) {
+            $query->where('district', $user->district);
+        } elseif (! $user->isAdmin()) {
+            $query->where('user_id', $user->id);
+        }
+
+        $ongoing_births = (clone $query)->where('status', 'en_cours')->count(); // ✅ corrige aussi "en cours" → "en_cours"
+        $recent_births = (clone $query)->orderBy('created_at', 'desc')->take(5)->get();
+
         $protocols = [
             'Protocole OMS 1',
             'Protocole OMS 2',

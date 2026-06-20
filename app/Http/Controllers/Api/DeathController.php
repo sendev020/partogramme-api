@@ -6,13 +6,26 @@ use App\Http\Controllers\Controller;
 use App\Models\Death;
 use App\Models\Labour;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class DeathController extends Controller
 {
-    /**
-     * Enregistrer un décès (mère ou nouveau-né)
-     * et terminer automatiquement le labour
-     */
+    private function visibleLabour($labourId)
+    {
+         /** @var User|null $user */
+        $user = Auth::user();
+        $query = Labour::where('id', $labourId);
+
+        if ($user->isSuperviseur()) {
+            $query->where('district', $user->district);
+        } elseif (! $user->isAdmin()) {
+            $query->where('user_id', $user->id);
+        }
+
+        return $query->first();
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -23,11 +36,13 @@ class DeathController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        // 1️⃣ Création du décès
+        $labour = $this->visibleLabour($validated['labour_id']);
+        if (! $labour) {
+            return response()->json(['message' => 'Accouchement non trouvé ou non autorisé'], 403);
+        }
+
         $death = Death::create($validated);
 
-        // 2️⃣ Mise à jour automatique du labour
-        $labour = Labour::findOrFail($validated['labour_id']);
         $labour->status = 'death';
         $labour->end_time = $validated['heure_deces'] ?? now();
         $labour->save();
@@ -42,4 +57,3 @@ class DeathController extends Controller
         ], 201);
     }
 }
-

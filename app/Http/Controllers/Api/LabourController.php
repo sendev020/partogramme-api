@@ -8,22 +8,42 @@ use App\Models\Labour;
 use App\Models\Patient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class LabourController extends Controller
 {
-    // Liste de tous les accouchements
-    // public function index()
-    // {
-    //     $labours = Labour::with('patient')->orderBy('created_at', 'desc')->get();
-    //     return response()->json(['labours' => $labours]);
-    // }
+    /**
+     * ✅ Applique le filtrage de visibilité selon le rôle de l'utilisateur connecté
+     * - sage_femme  → uniquement ses propres labours
+     * - superviseur → tous les labours de son district
+     * - admin       → tous les labours, tous districts
+     */
+    private function applyVisibilityScope($query)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
 
-    // Liste complète (alias)
+        if ($user->isAdmin()) {
+            // Aucun filtre supplémentaire
+            return $query;
+        }
+
+        if ($user->isSuperviseur()) {
+            return $query->where('district', $user->district);
+        }
+
+        // sage_femme (par défaut) → uniquement ses propres labours
+        return $query->where('user_id', $user->id);
+    }
+
+    // Liste complète (alias) — respecte aussi le scope
     public function allLabours()
     {
-        $labours = Labour::with('patient')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = Labour::with('patient');
+        $query = $this->applyVisibilityScope($query);
+
+        $labours = $query->orderBy('created_at', 'desc')->get();
 
         return response()->json([
             'success' => true,
@@ -35,13 +55,12 @@ class LabourController extends Controller
     public function index(Request $request)
     {
         $query = Labour::query();
+        $query = $this->applyVisibilityScope($query);
 
-        // Filtrer par statut
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Filtrer par date (par exemple date de début)
         if ($request->filled('date')) {
             $query->whereDate('start_time', $request->date);
         }
@@ -54,10 +73,10 @@ class LabourController extends Controller
     // Accouchements en cours
     public function ongoing()
     {
-        $labours = Labour::with('patient')
-            ->where('status', 'en_cours')
-            ->orderBy('start_time', 'asc')
-            ->get();
+        $query = Labour::with('patient')->where('status', 'en_cours');
+        $query = $this->applyVisibilityScope($query);
+
+        $labours = $query->orderBy('start_time', 'asc')->get();
 
         return response()->json(['labours' => $labours]);
     }
@@ -65,7 +84,10 @@ class LabourController extends Controller
     // Détail d'un accouchement
     public function show($id)
     {
-        $labour = Labour::with('patient')->find($id);
+        $query = Labour::with('patient')->where('id', $id);
+        $query = $this->applyVisibilityScope($query);
+
+        $labour = $query->first();
 
         if (! $labour) {
             return response()->json(['message' => 'Accouchement non trouvé'], 404);
@@ -82,7 +104,10 @@ class LabourController extends Controller
             'start_time' => 'required|date',
         ]);
 
-        // 🚫 Vérifier s’il existe déjà un labour actif
+
+        $user = Auth::user();
+
+        // 🚫 Vérifier s'il existe déjà un labour actif pour cette patiente
         $existingLabour = Labour::where('patient_id', $request->patient_id)
             ->where('status', 'en_cours')
             ->first();
@@ -91,13 +116,15 @@ class LabourController extends Controller
             return response()->json([
                 'message' => 'Un labour est déjà en cours pour cette patiente',
                 'labour' => $existingLabour,
-            ], 409); // Conflict
+            ], 409);
         }
 
-        // ✅ Création du labour
+        // ✅ Création du labour, lié à l'utilisateur et son district
         $labour = Labour::create([
             'patient_id' => $request->patient_id,
-            'user_id' => auth()->id(),
+            'user_id' => $user->id,
+            'district' => $user->district,
+            'poste_de_sante' => $user->poste_de_sante,
             'start_time' => $request->start_time,
             'status' => 'en_cours',
         ]);
@@ -108,7 +135,10 @@ class LabourController extends Controller
     // Clôturer un accouchement
     public function close($labourId)
     {
-        $labour = Labour::find($labourId);
+        $query = Labour::where('id', $labourId);
+        $query = $this->applyVisibilityScope($query);
+
+        $labour = $query->first();
 
         if (! $labour) {
             return response()->json(['message' => 'Accouchement non trouvé'], 404);
@@ -124,9 +154,10 @@ class LabourController extends Controller
     // Accouchement actif d'un patient
     public function active(Patient $patient)
     {
-        $labour = Labour::where('patient_id', $patient->id)
-            ->where('status', 'en_cours')
-            ->first();
+        $query = Labour::where('patient_id', $patient->id)->where('status', 'en_cours');
+        $query = $this->applyVisibilityScope($query);
+
+        $labour = $query->first();
 
         if (! $labour) {
             return response()->json(null, 204);
@@ -138,6 +169,14 @@ class LabourController extends Controller
     // Alertes liées à un accouchement
     public function alerts($labourId)
     {
+        // ✅ Vérifier que le labour est visible par l'utilisateur avant de montrer ses alertes
+        $labourQuery = Labour::where('id', $labourId);
+        $labourQuery = $this->applyVisibilityScope($labourQuery);
+
+        if (! $labourQuery->exists()) {
+            return response()->json(['message' => 'Accouchement non trouvé'], 404);
+        }
+
         $alerts = Alert::where('labour_id', $labourId)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -145,11 +184,19 @@ class LabourController extends Controller
         return response()->json(['alerts' => $alerts]);
     }
 
-    // ✅ Fin d’un labour
+    // ✅ Fin d'un labour
     public function finish(Request $request, $id)
     {
-        $labour = Labour::findOrFail($id);
-        $labour->status = $request->status; // accouche / referer / mort
+        $query = Labour::where('id', $id);
+        $query = $this->applyVisibilityScope($query);
+
+        $labour = $query->first();
+
+        if (! $labour) {
+            return response()->json(['message' => 'Accouchement non trouvé'], 404);
+        }
+
+        $labour->status = $request->status;
         $labour->save();
 
         return response()->json($labour);
@@ -157,21 +204,31 @@ class LabourController extends Controller
 
     public function monthlyStats()
     {
-        // On récupère le nombre d'accouchements par mois et par statut
-        $stats = DB::table('labours')
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        $query = DB::table('labours');
+
+        if ($user->isSuperviseur()) {
+            $query->where('district', $user->district);
+        } elseif (! $user->isAdmin()) {
+            $query->where('user_id', $user->id);
+        }
+        // admin → pas de filtre
+
+        $stats = $query
             ->selectRaw("
-            DATE_FORMAT(start_time, '%Y-%m') as month,
-            SUM(CASE WHEN status = 'en_cours' THEN 1 ELSE 0 END) as en_cours,
-            SUM(CASE WHEN status = 'refere' THEN 1 ELSE 0 END) as refere,
-            SUM(CASE WHEN status = 'termine' THEN 1 ELSE 0 END) as termine,
-            SUM(CASE WHEN status = 'delivery' THEN 1 ELSE 0 END) as delivery,
-            SUM(CASE WHEN status = 'death' THEN 1 ELSE 0 END) as death
-        ")
+                DATE_FORMAT(start_time, '%Y-%m') as month,
+                SUM(CASE WHEN status = 'en_cours' THEN 1 ELSE 0 END) as en_cours,
+                SUM(CASE WHEN status = 'refere' THEN 1 ELSE 0 END) as refere,
+                SUM(CASE WHEN status = 'termine' THEN 1 ELSE 0 END) as termine,
+                SUM(CASE WHEN status = 'delivery' THEN 1 ELSE 0 END) as delivery,
+                SUM(CASE WHEN status = 'death' THEN 1 ELSE 0 END) as death
+            ")
             ->groupBy('month')
             ->orderBy('month')
             ->get();
 
-        // Formater le mois en texte si besoin (Jan, Feb, etc.)
         $formatted = $stats->map(function ($s) {
             return [
                 'month' => date('M', strtotime($s->month.'-01')),
@@ -185,5 +242,4 @@ class LabourController extends Controller
 
         return response()->json($formatted);
     }
-
 }

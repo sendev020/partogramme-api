@@ -10,10 +10,20 @@ return new class extends Migration
     {
         Schema::create('labours', function (Blueprint $table) {
             $table->id();
+
             // 🔁 Synchronisation
             $table->unsignedBigInteger('server_id')->nullable()->unique();
+
             $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete(); // ✅ une seule fois
+
+            $table->enum('district', [
+                'sedhiou',
+                'goudomp',
+                'bounkiling',
+            ]);
+
+            $table->string('poste_de_sante')->nullable();
 
             $table->dateTime('start_time');
             $table->dateTime('end_time')->nullable();
@@ -24,7 +34,6 @@ return new class extends Migration
 
             $table->timestamps();
         });
-
     }
 
     public function down(): void
