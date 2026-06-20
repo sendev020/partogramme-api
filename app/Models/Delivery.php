@@ -8,6 +8,9 @@ class Delivery extends Model
 {
     protected $fillable = [
         'labour_id',
+        'user_id',
+        'district',
+        'poste_de_sante',
         'voie',
         'sexe',
         'poids',
@@ -21,5 +24,9 @@ class Delivery extends Model
     public function labour()
     {
         return $this->belongsTo(Labour::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

@@ -5,19 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Labour;
 use App\Models\Observation;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 
 class ObservationController extends Controller
 {
-    /**
-     * ✅ Vérifie que le labour est visible par l'utilisateur connecté
-     * et le retourne, ou null si non autorisé / inexistant.
-     */
     private function visibleLabour($labourId)
     {
-         /** @var User|null $user */
+        /** @var User|null $user */
         $user = Auth::user();
         $query = Labour::where('id', $labourId);
 
@@ -66,14 +62,17 @@ class ObservationController extends Controller
             'updated_at' => 'nullable|date',
         ]);
 
-        // ✅ Vérifier que l'utilisateur a le droit d'ajouter une observation à ce labour
         $labour = $this->visibleLabour($data['labour_id']);
         if (! $labour) {
             return response()->json(['message' => 'Accouchement non trouvé ou non autorisé'], 403);
         }
 
+        // ✅ Hériter user_id/district/poste_de_sante depuis le labour parent
         $observation = Observation::create([
             'labour_id' => $data['labour_id'],
+            'user_id' => $labour->user_id,
+            'district' => $labour->district,
+            'poste_de_sante' => $labour->poste_de_sante,
             'dilation' => $data['dilation'] ?? null,
             'contractions' => $data['contractions'] ?? null,
             'fcf' => $data['fcf'] ?? null,
@@ -153,7 +152,6 @@ class ObservationController extends Controller
     {
         $obs = Observation::findOrFail($id);
 
-        // ✅ Vérifier que le labour parent est visible par l'utilisateur
         $labour = $this->visibleLabour($obs->labour_id);
         if (! $labour) {
             return response()->json(['message' => 'Non autorisé'], 403);
@@ -185,7 +183,6 @@ class ObservationController extends Controller
 
         $query = Observation::where('updated_at', '>', $since);
 
-        // ✅ Filtrer via le labour parent selon le rôle
         if ($user->isSuperviseur()) {
             $query->whereHas('labour', function ($q) use ($user) {
                 $q->where('district', $user->district);
@@ -198,4 +195,20 @@ class ObservationController extends Controller
 
         return $query->get();
     }
+
+    /// 🗑️ Supprimer une observation (admin uniquement)
+public function destroy($id)
+{
+    /** @var User|null $user */
+    $user = Auth::user();
+
+    if (! $user->isAdmin()) {
+        return response()->json(['message' => 'Action réservée aux administrateurs'], 403);
+    }
+
+    $observation = Observation::findOrFail($id);
+    $observation->delete();
+
+    return response()->json(['message' => 'Observation supprimée']);
+}
 }

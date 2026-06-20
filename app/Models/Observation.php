@@ -8,6 +8,9 @@ class Observation extends Model
 {
     protected $fillable = [
         'labour_id',
+        'user_id',
+        'district',
+        'poste_de_sante',
         'dilation',
         'contractions',
         'fcf',
@@ -29,5 +32,9 @@ class Observation extends Model
     public function labour()
     {
         return $this->belongsTo(Labour::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

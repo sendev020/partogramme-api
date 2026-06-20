@@ -16,6 +16,16 @@ return new class extends Migration {
                 ->constrained('labours')
                 ->onDelete('cascade');
 
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete(); // ✅ une seule fois
+
+            $table->enum('district', [
+                'sedhiou',
+                'goudomp',
+                'bounkiling',
+            ]);
+
+            $table->string('poste_de_sante')->nullable();
+
             // 🏥 Informations de référence
             $table->string('hospital'); // ex: Hôpital régional
             $table->text('reason'); // raison de la référence

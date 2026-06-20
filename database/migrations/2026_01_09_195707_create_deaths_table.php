@@ -20,6 +20,15 @@ return new class extends Migration
             $table->foreignId('labour_id')
                 ->constrained('labours')
                 ->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete(); // ✅ une seule fois
+
+            $table->enum('district', [
+                'sedhiou',
+                'goudomp',
+                'bounkiling',
+            ]);
+
+            $table->string('poste_de_sante')->nullable();
             // ⚰️ Détails du décès
             $table->string('concerner')->nullable();
             $table->string('cause_deces')->nullable(); // e.g., 'complications', 'infection', etc.

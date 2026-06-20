@@ -22,6 +22,16 @@ return new class extends Migration
                 ->constrained('labours')
                 ->onDelete('cascade');
 
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete(); // ✅ une seule fois
+
+            $table->enum('district', [
+                'sedhiou',
+                'goudomp',
+                'bounkiling',
+            ]);
+
+            $table->string('poste_de_sante')->nullable();
+
             // 🚼 Détails de l'accouchement
              $table->string('voie'); // e.g., 'vaginal', 'cesarean'
             $table->string('sexe'); // e.g., 'male', 'female'

@@ -13,6 +13,15 @@ return new class extends Migration
             $table->unsignedBigInteger('server_id')->nullable()->unique();
 
             $table->foreignId('labour_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete(); // ✅ une seule fois
+
+            $table->enum('district', [
+                'sedhiou',
+                'goudomp',
+                'bounkiling',
+            ]);
+
+            $table->string('poste_de_sante')->nullable();
 
             $table->enum('level', ['orange', 'rouge']);
             $table->string('message');

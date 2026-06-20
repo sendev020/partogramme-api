@@ -20,6 +20,16 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete();
 
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete(); // ✅ une seule fois
+
+            $table->enum('district', [
+                'sedhiou',
+                'goudomp',
+                'bounkiling',
+            ]);
+
+            $table->string('poste_de_sante')->nullable();
+
             // 🟠 PARTOGRAMME OMS
             $table->decimal('dilation', 4, 1)->nullable(); // cm
             $table->integer('contractions')->nullable();  // /10 min

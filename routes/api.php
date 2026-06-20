@@ -88,4 +88,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/deliveries', [DeliveryController::class, 'index']);
     Route::get('/deliveries/{id}', [DeliveryController::class, 'show']);
     Route::post('/deliveries', [DeliveryController::class, 'store']);
+
+    Route::delete('/observations/{id}', [ObservationController::class, 'destroy']);
 });
