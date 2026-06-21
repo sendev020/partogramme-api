@@ -44,10 +44,16 @@ class ObservationController extends Controller
     private function checkAlerts($observation)
     {
         $alerts = [];
+        $userId = $observation->user_id;
+        $district = $observation->district;
+        $posteDeSante = $observation->poste_de_sante;
 
         if ($observation->fcf < 120 || $observation->fcf > 160) {
             $alerts[] = [
                 'labour_id' => $observation->labour_id,
+                'user_id' => $userId,
+                'district' => $district,
+                'poste_de_sante' => $posteDeSante,
                 'level' => 'rouge',
                 'message' => 'Anomalie du rythme cardiaque fœtal (FCF)',
             ];
@@ -56,6 +62,9 @@ class ObservationController extends Controller
         if ($observation->dilation < 1) {
             $alerts[] = [
                 'labour_id' => $observation->labour_id,
+                'user_id' => $userId,
+                'district' => $district,
+                'poste_de_sante' => $posteDeSante,
                 'level' => 'orange',
                 'message' => 'Dilatation faible',
             ];
@@ -65,6 +74,9 @@ class ObservationController extends Controller
             ($observation->temperature < 36 || $observation->temperature > 38)) {
             $alerts[] = [
                 'labour_id' => $observation->labour_id,
+                'user_id' => $userId,
+                'district' => $district,
+                'poste_de_sante' => $posteDeSante,
                 'level' => 'orange',
                 'message' => 'Température anormale',
             ];
@@ -73,6 +85,9 @@ class ObservationController extends Controller
         if ($observation->systolic_bp >= 140 || $observation->diastolic_bp >= 90) {
             $alerts[] = [
                 'labour_id' => $observation->labour_id,
+                'user_id' => $userId,
+                'district' => $district,
+                'poste_de_sante' => $posteDeSante,
                 'level' => 'orange',
                 'message' => 'Hypertension maternelle',
             ];
@@ -81,6 +96,9 @@ class ObservationController extends Controller
         if ($observation->station != null && ($observation->station < -3 || $observation->station > 3)) {
             $alerts[] = [
                 'labour_id' => $observation->labour_id,
+                'user_id' => $userId,
+                'district' => $district,
+                'poste_de_sante' => $posteDeSante,
                 'level' => 'orange',
                 'message' => 'Station anormale',
             ];
