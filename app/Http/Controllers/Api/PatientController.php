@@ -39,7 +39,16 @@ class PatientController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        // ✅ Seule la sage-femme peut créer
+        // ✅ Blocage explicite : superviseur ne peut jamais créer
+        if ($user->isSuperviseur()) {
+            return response()->json(['message' => 'Les superviseurs ne peuvent pas créer de patiente'], 403);
+        }
+
+        // ✅ Blocage explicite : admin ne peut jamais créer
+        if ($user->isAdmin()) {
+            return response()->json(['message' => 'Les administrateurs ne peuvent pas créer de patiente'], 403);
+        }
+
         if (! $user->isSageFemme()) {
             return response()->json(['message' => 'Action réservée aux sages-femmes'], 403);
         }
@@ -66,13 +75,23 @@ class PatientController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
+        // ✅ Blocage explicite : superviseur ne peut jamais modifier
+        if ($user->isSuperviseur()) {
+            return response()->json(['message' => 'Les superviseurs ne peuvent pas modifier une patiente'], 403);
+        }
+
+        // ✅ Blocage explicite : admin ne peut jamais modifier
+        if ($user->isAdmin()) {
+            return response()->json(['message' => 'Les administrateurs ne peuvent pas modifier une patiente'], 403);
+        }
+
         if (! $user->isSageFemme()) {
             return response()->json(['message' => 'Action réservée aux sages-femmes'], 403);
         }
 
-        $query = Patient::where('id', $id);
-        $query = $this->applyVisibilityScope($query);
-        $patient = $query->first();
+        $patient = Patient::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
 
         if (! $patient) {
             return response()->json(['message' => 'Patiente non trouvée ou non autorisée'], 404);
@@ -96,7 +115,12 @@ class PatientController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        // ✅ Sage-femme (ses propres patientes) OU admin (toutes)
+        // ✅ Blocage explicite : superviseur ne peut jamais supprimer
+        if ($user->isSuperviseur()) {
+            return response()->json(['message' => 'Les superviseurs ne peuvent pas supprimer une patiente'], 403);
+        }
+
+        // ✅ Au-delà de ce point, seuls sage_femme et admin sont admis
         if (! $user->isSageFemme() && ! $user->isAdmin()) {
             return response()->json(['message' => 'Action non autorisée'], 403);
         }
@@ -113,7 +137,6 @@ class PatientController extends Controller
             return response()->json(['message' => 'Patiente non trouvée ou non autorisée'], 404);
         }
 
-        // ✅ Cascade : soft-delete des labours + observations liés
         foreach ($patient->labours as $labour) {
             $labour->observations()->delete();
             $labour->delete();

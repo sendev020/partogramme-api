@@ -96,42 +96,6 @@ class LabourController extends Controller
         return response()->json($labour);
     }
 
-    // Créer un nouvel accouchement
-    public function store(Request $request)
-    {
-        $request->validate([
-            'patient_id' => 'required|exists:patients,id',
-            'start_time' => 'required|date',
-        ]);
-
-
-        $user = Auth::user();
-
-        // 🚫 Vérifier s'il existe déjà un labour actif pour cette patiente
-        $existingLabour = Labour::where('patient_id', $request->patient_id)
-            ->where('status', 'en_cours')
-            ->first();
-
-        if ($existingLabour) {
-            return response()->json([
-                'message' => 'Un labour est déjà en cours pour cette patiente',
-                'labour' => $existingLabour,
-            ], 409);
-        }
-
-        // ✅ Création du labour, lié à l'utilisateur et son district
-        $labour = Labour::create([
-            'patient_id' => $request->patient_id,
-            'user_id' => $user->id,
-            'district' => $user->district,
-            'poste_de_sante' => $user->poste_de_sante,
-            'start_time' => $request->start_time,
-            'status' => 'en_cours',
-        ]);
-
-        return response()->json($labour, 201);
-    }
-
     // Clôturer un accouchement
     public function close($labourId)
     {
@@ -243,17 +207,71 @@ class LabourController extends Controller
         return response()->json($formatted);
     }
 
-    public function update(Request $request, $id)
+public function store(Request $request)
 {
     /** @var User $user */
     $user = Auth::user();
+
+    // ✅ Blocage explicite : superviseur ne peut jamais créer
+    if ($user->isSuperviseur()) {
+        return response()->json(['message' => 'Les superviseurs ne peuvent pas créer de labour'], 403);
+    }
+
+    // ✅ Blocage explicite : admin ne peut jamais créer
+    if ($user->isAdmin()) {
+        return response()->json(['message' => 'Les administrateurs ne peuvent pas créer de labour'], 403);
+    }
+
+    $request->validate([
+        'patient_id' => 'required|exists:patients,id',
+        'start_time' => 'required|date',
+    ]);
+
+    $existingLabour = Labour::where('patient_id', $request->patient_id)
+        ->where('status', 'en_cours')
+        ->first();
+
+    if ($existingLabour) {
+        return response()->json([
+            'message' => 'Un labour est déjà en cours pour cette patiente',
+            'labour' => $existingLabour,
+        ], 409);
+    }
+
+    $labour = Labour::create([
+        'patient_id' => $request->patient_id,
+        'user_id' => $user->id,
+        'district' => $user->district,
+        'poste_de_sante' => $user->poste_de_sante,
+        'start_time' => $request->start_time,
+        'status' => 'en_cours',
+    ]);
+
+    return response()->json($labour, 201);
+}
+
+public function update(Request $request, $id)
+{
+    /** @var User $user */
+    $user = Auth::user();
+
+    // ✅ Blocage explicite : superviseur ne peut jamais modifier
+    if ($user->isSuperviseur()) {
+        return response()->json(['message' => 'Les superviseurs ne peuvent pas modifier un labour'], 403);
+    }
+
+    // ✅ Blocage explicite : admin ne peut jamais modifier
+    if ($user->isAdmin()) {
+        return response()->json(['message' => 'Les administrateurs ne peuvent pas modifier un labour'], 403);
+    }
 
     if (! $user->isSageFemme()) {
         return response()->json(['message' => 'Action réservée aux sages-femmes'], 403);
     }
 
-    $query = Labour::where('id', $id)->where('user_id', $user->id);
-    $labour = $query->first();
+    $labour = Labour::where('id', $id)
+        ->where('user_id', $user->id)
+        ->first();
 
     if (! $labour) {
         return response()->json(['message' => 'Accouchement non trouvé ou non autorisé'], 404);
@@ -275,6 +293,12 @@ public function destroy($id)
     /** @var User $user */
     $user = Auth::user();
 
+    // ✅ Blocage explicite : superviseur ne peut jamais supprimer
+    if ($user->isSuperviseur()) {
+        return response()->json(['message' => 'Les superviseurs ne peuvent pas supprimer un labour'], 403);
+    }
+
+    // ✅ Au-delà de ce point, seuls sage_femme et admin sont admis
     if (! $user->isSageFemme() && ! $user->isAdmin()) {
         return response()->json(['message' => 'Action non autorisée'], 403);
     }

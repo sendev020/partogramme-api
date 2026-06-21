@@ -46,45 +46,6 @@ class DeliveryController extends Controller
         return $query;
     }
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'labour_id' => 'required|exists:labours,id',
-            'voie' => 'required|string',
-            'sexe' => 'required|string|in:M,F',
-            'poids' => 'required|numeric',
-            'heure_naissance' => 'required|date',
-            'notes' => 'nullable|string',
-            'complications' => 'nullable|string',
-            'soins_administres' => 'required|string',
-        ]);
-
-        $labour = $this->visibleLabour($validated['labour_id']);
-        if (! $labour) {
-            return response()->json(['message' => 'Accouchement non trouvé ou non autorisé'], 403);
-        }
-
-        // ✅ Hériter user_id/district/poste_de_sante depuis le labour parent
-        $delivery = Delivery::create([
-            ...$validated,
-            'user_id' => $labour->user_id,
-            'district' => $labour->district,
-            'poste_de_sante' => $labour->poste_de_sante,
-        ]);
-
-        $labour->status = 'delivery';
-        $labour->save();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Accouchement enregistrée avec succès',
-            'data' => [
-                'delivery' => $delivery,
-                'labour' => $labour,
-            ],
-        ], 201);
-    }
-
     public function index()
     {
         $query = Delivery::with('labour');
@@ -106,4 +67,55 @@ class DeliveryController extends Controller
 
         return response()->json(['data' => $delivery]);
     }
+
+    public function store(Request $request)
+{
+    /** @var User $user */
+    $user = Auth::user();
+
+    // ✅ Blocage explicite : superviseur ne peut jamais créer
+    if ($user->isSuperviseur()) {
+        return response()->json(['message' => 'Les superviseurs ne peuvent pas enregistrer un accouchement'], 403);
+    }
+
+    // ✅ Blocage explicite : admin ne peut jamais créer
+    if ($user->isAdmin()) {
+        return response()->json(['message' => 'Les administrateurs ne peuvent pas enregistrer un accouchement'], 403);
+    }
+
+    $validated = $request->validate([
+        'labour_id' => 'required|exists:labours,id',
+        'voie' => 'required|string',
+        'sexe' => 'required|string|in:M,F',
+        'poids' => 'required|numeric',
+        'heure_naissance' => 'required|date',
+        'notes' => 'nullable|string',
+        'complications' => 'nullable|string',
+        'soins_administres' => 'required|string',
+    ]);
+
+    $labour = $this->visibleLabour($validated['labour_id']);
+    if (! $labour) {
+        return response()->json(['message' => 'Accouchement non trouvé ou non autorisé'], 403);
+    }
+
+    $delivery = Delivery::create([
+        ...$validated,
+        'user_id' => $labour->user_id,
+        'district' => $labour->district,
+        'poste_de_sante' => $labour->poste_de_sante,
+    ]);
+
+    $labour->status = 'delivery';
+    $labour->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Accouchement enregistrée avec succès',
+        'data' => [
+            'delivery' => $delivery,
+            'labour' => $labour,
+        ],
+    ], 201);
+}
 }
