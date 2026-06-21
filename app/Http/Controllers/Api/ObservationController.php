@@ -241,4 +241,25 @@ public function destroy($id)
 
     return response()->json(['message' => 'Observation supprimée']);
 }
+
+// Dans ObservationController.php, ajoute cette méthode
+public function allForUser()
+{
+    /** @var User $user */
+    $user = Auth::user();
+
+    $query = Observation::query();
+
+    if ($user->isSuperviseur()) {
+        $query->whereHas('labour', function ($q) use ($user) {
+            $q->where('district', $user->district);
+        });
+    } elseif (! $user->isAdmin()) {
+        $query->whereHas('labour', function ($q) use ($user) {
+            $q->where('user_id', $user->id);
+        });
+    }
+
+    return response()->json(['data' => $query->get()]);
+}
 }
