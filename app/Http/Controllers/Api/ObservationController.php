@@ -91,26 +91,26 @@ class ObservationController extends Controller
         }
     }
 
-    public function sync(Request $request)
-    {
-        $since = $request->query('since');
-        /** @var User|null $user */
-        $user = Auth::user();
+    // public function sync(Request $request)
+    // {
+    //     $since = $request->query('since');
+    //     /** @var User|null $user */
+    //     $user = Auth::user();
 
-        $query = Observation::where('updated_at', '>', $since);
+    //     $query = Observation::where('updated_at', '>', $since);
 
-        if ($user->isSuperviseur()) {
-            $query->whereHas('labour', function ($q) use ($user) {
-                $q->where('district', $user->district);
-            });
-        } elseif (! $user->isAdmin()) {
-            $query->whereHas('labour', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
-            });
-        }
+    //     if ($user->isSuperviseur()) {
+    //         $query->whereHas('labour', function ($q) use ($user) {
+    //             $q->where('district', $user->district);
+    //         });
+    //     } elseif (! $user->isAdmin()) {
+    //         $query->whereHas('labour', function ($q) use ($user) {
+    //             $q->where('user_id', $user->id);
+    //         });
+    //     }
 
-        return $query->get();
-    }
+    //     return $query->get();
+    // }
 
 public function store(Request $request)
 {

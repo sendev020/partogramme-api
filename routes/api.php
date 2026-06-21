@@ -36,6 +36,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/patients', [PatientController::class, 'index']);
     Route::post('/patients', [PatientController::class, 'store']);
     Route::get('/patients/{patient}/active-labour', [LabourController::class, 'active']);
+    Route::put('/patients/{id}', [PatientController::class, 'update']);
+    Route::delete('/patients/{id}', [PatientController::class, 'destroy']);
 
     /*
     |--------------------------------------------------------------------------
@@ -47,10 +49,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/labours/ongoing', [LabourController::class, 'ongoing']);
     Route::get('/labours/monthly', [LabourController::class, 'monthlyStats']);
     Route::get('/labours/{id}', [LabourController::class, 'show']);
+    Route::put('/labours/{id}', [LabourController::class, 'update']);
     Route::post('/labours', [LabourController::class, 'store']);
     Route::post('/labours/{labour}/close', [LabourController::class, 'close']);
     Route::post('/labours/{id}/finish', [LabourController::class, 'finish']);
     Route::get('/labours/{labour}/alerts', [LabourController::class, 'alerts']);
+    Route::delete('/labours/{id}', [LabourController::class, 'destroy']);
 
     /*
     |--------------------------------------------------------------------------
@@ -60,7 +64,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/labours/{labour}/observations', [ObservationController::class, 'index']);
     Route::post('/observations', [ObservationController::class, 'store']);
     Route::put('/observations/{id}', [ObservationController::class, 'update']);
-    Route::get('/observations/sync', [ObservationController::class, 'sync']);
+    //Route::get('/observations/sync', [ObservationController::class, 'sync']);
+    Route::delete('/observations/{id}', [ObservationController::class, 'destroy']);
+    Route::get('/observations/all', [ObservationController::class, 'allForUser']);
 
     /*
     |--------------------------------------------------------------------------
@@ -88,18 +94,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/deliveries', [DeliveryController::class, 'index']);
     Route::get('/deliveries/{id}', [DeliveryController::class, 'show']);
     Route::post('/deliveries', [DeliveryController::class, 'store']);
-
-    Route::delete('/observations/{id}', [ObservationController::class, 'destroy']);
-
-    Route::put('/patients/{id}', [PatientController::class, 'update']);
-    Route::delete('/patients/{id}', [PatientController::class, 'destroy']);
-
-    Route::put('/labours/{id}', [LabourController::class, 'update']);
-    Route::delete('/labours/{id}', [LabourController::class, 'destroy']);
-
-    Route::delete('/observations/{id}', [ObservationController::class, 'destroy']);
-
-    Route::get('/observations/all', [ObservationController::class, 'allForUser']);
-
-    Route::post('/observations', [ObservationController::class, 'store']);
 });
