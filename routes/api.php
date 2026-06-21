@@ -100,4 +100,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/observations/{id}', [ObservationController::class, 'destroy']);
 
     Route::get('/observations/all', [ObservationController::class, 'allForUser']);
+
+    Route::post('/observations', [ObservationController::class, 'store']);
 });
