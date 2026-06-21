@@ -242,4 +242,58 @@ class LabourController extends Controller
 
         return response()->json($formatted);
     }
+
+    public function update(Request $request, $id)
+{
+    /** @var User $user */
+    $user = Auth::user();
+
+    if (! $user->isSageFemme()) {
+        return response()->json(['message' => 'Action réservée aux sages-femmes'], 403);
+    }
+
+    $query = Labour::where('id', $id)->where('user_id', $user->id);
+    $labour = $query->first();
+
+    if (! $labour) {
+        return response()->json(['message' => 'Accouchement non trouvé ou non autorisé'], 404);
+    }
+
+    $validated = $request->validate([
+        'start_time' => 'sometimes|date',
+        'end_time' => 'nullable|date',
+        'status' => 'sometimes|in:en_cours,termine,refere,delivery,death',
+    ]);
+
+    $labour->update($validated);
+
+    return response()->json($labour);
+}
+
+public function destroy($id)
+{
+    /** @var User $user */
+    $user = Auth::user();
+
+    if (! $user->isSageFemme() && ! $user->isAdmin()) {
+        return response()->json(['message' => 'Action non autorisée'], 403);
+    }
+
+    $query = Labour::where('id', $id);
+
+    if (! $user->isAdmin()) {
+        $query->where('user_id', $user->id);
+    }
+
+    $labour = $query->first();
+
+    if (! $labour) {
+        return response()->json(['message' => 'Accouchement non trouvé ou non autorisé'], 404);
+    }
+
+    $labour->observations()->delete();
+    $labour->delete();
+
+    return response()->json(['message' => 'Accouchement supprimé']);
+}
 }

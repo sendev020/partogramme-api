@@ -90,4 +90,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/deliveries', [DeliveryController::class, 'store']);
 
     Route::delete('/observations/{id}', [ObservationController::class, 'destroy']);
+
+    Route::put('/patients/{id}', [PatientController::class, 'update']);
+Route::delete('/patients/{id}', [PatientController::class, 'destroy']);
+
+Route::put('/labours/{id}', [LabourController::class, 'update']);
+Route::delete('/labours/{id}', [LabourController::class, 'destroy']);
+
+Route::delete('/observations/{id}', [ObservationController::class, 'destroy']);
 });
