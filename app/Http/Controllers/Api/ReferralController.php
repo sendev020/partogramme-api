@@ -62,6 +62,7 @@ class ReferralController extends Controller
     ]);
 
     $labour->status = 'refere';
+    $labour->hospital_referred_to = $request->hospital_referred_to;
     $labour->save();
 
     return response()->json([

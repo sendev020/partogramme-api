@@ -9,7 +9,7 @@ class Labour extends Model
 {
     use SoftDeletes;
     protected $fillable = [
-        'patient_id', 'user_id', 'district', 'poste_de_sante', 'start_time', 'end_time', 'status', 'synced', 'server_id',
+        'patient_id', 'user_id', 'district', 'poste_de_sante','hospital_referred_to', 'start_time', 'end_time', 'status', 'synced', 'server_id',
     ];
 
     public function patient()

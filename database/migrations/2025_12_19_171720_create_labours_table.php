@@ -30,6 +30,8 @@ return new class extends Migration
 
             $table->enum('status', ['en_cours', 'termine', 'refere', 'delivery', 'death'])->default('en_cours');
 
+            $table->string('hospital_referred_to')->nullable();
+
             $table->boolean('synced')->default(false);
 
             $table->timestamps();
