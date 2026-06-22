@@ -59,10 +59,11 @@ class ReferralController extends Controller
         'user_id' => $labour->user_id,
         'district' => $labour->district,
         'poste_de_sante' => $labour->poste_de_sante,
+        'hospital_referred_to' => $labour->hospital_referred_to,
     ]);
 
     $labour->status = 'refere';
-    $labour->hospital_referred_to = $request->hospital_referred_to;
+    //$labour->hospital_referred_to = $request->hospital_referred_to;
     $labour->save();
 
     return response()->json([
