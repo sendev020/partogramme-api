@@ -201,40 +201,43 @@ class ObservationController extends Controller
 
 public function store(Request $request)
 {
-    /** @var User $user */
-    $user = Auth::user();
-
-    if ($user->isSuperviseur()) {
-        return response()->json(['message' => 'Les superviseurs ne peuvent pas ajouter d\'observation'], 403);
-    }
-
-    if ($user->isAdmin()) {
-        return response()->json(['message' => 'Les administrateurs ne peuvent pas ajouter d\'observation'], 403);
-    }
-
-    $data = $request->validate([
-        'local_id' => 'nullable|integer',
-        'labour_id' => 'required|exists:labours,id',
-        'dilation' => 'nullable|numeric|min:0|max:10',
-        'contractions' => 'nullable|integer|min:0',
-        'fcf' => 'nullable|integer|min:60|max:220',
-        'station' => 'nullable|integer|min:-3|max:3',
-        'systolic_bp' => 'nullable|integer',
-        'diastolic_bp' => 'nullable|integer',
-        'temperature' => 'nullable|numeric',
-        'pulse' => 'nullable|integer',
-        'notes' => 'nullable|string',
-        'observed_at' => 'nullable|date',
-        'updated_at' => 'nullable|date',
-    ]);
-
-    $labour = $this->visibleLabour($data['labour_id']);
-    if (! $labour) {
-        return response()->json(['message' => 'Accouchement non trouvé ou non autorisé'], 403);
-    }
-
-    // ✅ TEMPORAIRE : capture explicite de l'erreur réelle pour diagnostic
     try {
+        /** @var User $user */
+        $user = Auth::user();
+
+        if (! $user) {
+            return response()->json(['message' => 'DEBUG: utilisateur non authentifié'], 401);
+        }
+
+        if ($user->isSuperviseur()) {
+            return response()->json(['message' => 'Les superviseurs ne peuvent pas ajouter d\'observation'], 403);
+        }
+
+        if ($user->isAdmin()) {
+            return response()->json(['message' => 'Les administrateurs ne peuvent pas ajouter d\'observation'], 403);
+        }
+
+        $data = $request->validate([
+            'local_id' => 'nullable|integer',
+            'labour_id' => 'required|exists:labours,id',
+            'dilation' => 'nullable|numeric|min:0|max:10',
+            'contractions' => 'nullable|integer|min:0',
+            'fcf' => 'nullable|integer|min:60|max:220',
+            'station' => 'nullable|integer|min:-3|max:3',
+            'systolic_bp' => 'nullable|integer',
+            'diastolic_bp' => 'nullable|integer',
+            'temperature' => 'nullable|numeric',
+            'pulse' => 'nullable|integer',
+            'notes' => 'nullable|string',
+            'observed_at' => 'nullable|date',
+            'updated_at' => 'nullable|date',
+        ]);
+
+        $labour = $this->visibleLabour($data['labour_id']);
+        if (! $labour) {
+            return response()->json(['message' => 'Accouchement non trouvé ou non autorisé'], 403);
+        }
+
         $observation = Observation::create([
             'labour_id' => $data['labour_id'],
             'user_id' => $labour->user_id,
@@ -261,12 +264,12 @@ public function store(Request $request)
             'local_id' => $data['local_id'] ?? null,
         ], 201);
     } catch (\Throwable $e) {
-        // ✅ Renvoie le vrai message d'erreur dans la réponse JSON
         return response()->json([
             'message' => 'DEBUG ERROR',
             'error' => $e->getMessage(),
-            'file' => $e->getFile(),
+            'file' => basename($e->getFile()),
             'line' => $e->getLine(),
+            'trace' => collect($e->getTrace())->take(3)->map(fn ($t) => ($t['file'] ?? '?') . ':' . ($t['line'] ?? '?'))->toArray(),
         ], 500);
     }
 }
