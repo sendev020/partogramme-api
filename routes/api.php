@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\ObservationController;
 use App\Http\Controllers\Api\PartographController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\ReferralController;
+use App\Http\Controllers\Api\SupportCareController;
+use App\Http\Controllers\Api\MedicamentController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -74,6 +76,28 @@ Route::middleware('auth:sanctum')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | SUPPORT CARE
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/labours/{labour}/support-cares', [SupportCareController::class, 'index']);
+    Route::post('/support-cares', [SupportCareController::class, 'store']);
+    Route::get('/support-cares/{id}', [SupportCareController::class, 'show']);
+    Route::put('/support-cares/{id}', [SupportCareController::class, 'update']);
+    Route::delete('/support-cares/{id}', [SupportCareController::class, 'destroy']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | MEDICAMENTS
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/labours/{labour}/medicaments', [MedicamentController::class, 'index']);
+    Route::post('/medicaments', [MedicamentController::class, 'store']);
+    Route::get('/medicaments/{id}', [MedicamentController::class, 'show']);
+    Route::put('/medicaments/{id}', [MedicamentController::class, 'update']);
+    Route::delete('/medicaments/{id}', [MedicamentController::class, 'destroy']);
+
+    /*
+    |--------------------------------------------------------------------------
     | PARTOGRAMME
     |--------------------------------------------------------------------------
     */
@@ -110,6 +134,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         if ($user->isSuperviseur()) {
             $query->where('district', $user->district);
+        } elseif ($user->isSuperviseurRegional() && $request->filled('district')) {
+            $query->where('district', $request->district);
         } elseif ($user->isAdmin() && $request->filled('district')) {
             $query->where('district', $request->district);
         }

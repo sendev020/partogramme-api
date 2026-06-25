@@ -18,7 +18,7 @@ class HomeController extends Controller
 
         if ($user->isSuperviseur()) {
             $query->where('district', $user->district);
-        } elseif (! $user->isAdmin()) {
+        } elseif (! $user->isAdmin() && ! $user->isSuperviseurRegional()) {
             $query->where('user_id', $user->id);
         }
 

@@ -41,6 +41,23 @@ return new class extends Migration
             $table->integer('diastolic_bp')->nullable();
             $table->decimal('temperature', 4, 1)->nullable();
             $table->integer('pulse')->nullable();
+            // Liquide amniotique
+            $table->enum('amniotic_fluid', ['intact', 'clair', 'meconial+', 'meconial++', 'meconial+++','sanglant'])->nullable();
+
+            // Ralentissement RCF
+            $table->enum('fetal_heart_deceleration', ['aucun', 'precoce', 'tardif', 'variable'])->nullable();
+
+            // Position fœtale
+            $table->enum('fetal_position', ['anterieure', 'posterieure', 'transverse'])->nullable();
+
+            // Bosse sérosanguine
+            $table->enum('caput', ['0', '+', '++','+++'])->nullable();
+
+            // Modelage
+            $table->enum('moulding', ['0', '+', '++','+++'])->nullable();
+
+            // urines
+            $table->enum('urines', ['acetone', 'proteine'])->nullable();
 
             // 📝 NOTES
             $table->text('notes')->nullable();

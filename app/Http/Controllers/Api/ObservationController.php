@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Labour;
 use App\Models\Observation;
 use App\Models\User;
+use App\Services\AlertService;
+use App\Services\PartographService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,7 +21,7 @@ class ObservationController extends Controller
 
         if ($user->isSuperviseur()) {
             $query->where('district', $user->district);
-        } elseif (! $user->isAdmin()) {
+        } elseif (! $user->isAdmin() && ! $user->isSuperviseurRegional()) {
             $query->where('user_id', $user->id);
         }
 
@@ -41,73 +43,6 @@ class ObservationController extends Controller
         return response()->json(['observations' => $observations]);
     }
 
-    private function checkAlerts($observation)
-    {
-        $alerts = [];
-        $userId = $observation->user_id;
-        $district = $observation->district;
-        $posteDeSante = $observation->poste_de_sante;
-
-        if ($observation->fcf < 120 || $observation->fcf > 160) {
-            $alerts[] = [
-                'labour_id' => $observation->labour_id,
-                'user_id' => $userId,
-                'district' => $district,
-                'poste_de_sante' => $posteDeSante,
-                'level' => 'rouge',
-                'message' => 'Anomalie du rythme cardiaque fœtal (FCF)',
-            ];
-        }
-
-        if ($observation->dilation < 1) {
-            $alerts[] = [
-                'labour_id' => $observation->labour_id,
-                'user_id' => $userId,
-                'district' => $district,
-                'poste_de_sante' => $posteDeSante,
-                'level' => 'orange',
-                'message' => 'Dilatation faible',
-            ];
-        }
-
-        if ($observation->temperature != null &&
-            ($observation->temperature < 36 || $observation->temperature > 38)) {
-            $alerts[] = [
-                'labour_id' => $observation->labour_id,
-                'user_id' => $userId,
-                'district' => $district,
-                'poste_de_sante' => $posteDeSante,
-                'level' => 'orange',
-                'message' => 'Température anormale',
-            ];
-        }
-
-        if ($observation->systolic_bp >= 140 || $observation->diastolic_bp >= 90) {
-            $alerts[] = [
-                'labour_id' => $observation->labour_id,
-                'user_id' => $userId,
-                'district' => $district,
-                'poste_de_sante' => $posteDeSante,
-                'level' => 'orange',
-                'message' => 'Hypertension maternelle',
-            ];
-        }
-
-        if ($observation->station != null && ($observation->station < -3 || $observation->station > 3)) {
-            $alerts[] = [
-                'labour_id' => $observation->labour_id,
-                'user_id' => $userId,
-                'district' => $district,
-                'poste_de_sante' => $posteDeSante,
-                'level' => 'orange',
-                'message' => 'Station anormale',
-            ];
-        }
-
-        foreach ($alerts as $alert) {
-            \App\Models\Alert::create($alert);
-        }
-    }
 
     public function store(Request $request)
     {
@@ -119,7 +54,7 @@ class ObservationController extends Controller
                 return response()->json(['message' => 'DEBUG: utilisateur non authentifié'], 401);
             }
 
-            if ($user->isSuperviseur()) {
+            if ($user->isAnySuperviseur()) {
                 return response()->json(['message' => 'Les superviseurs ne peuvent pas ajouter d\'observation'], 403);
             }
 
@@ -138,6 +73,12 @@ class ObservationController extends Controller
                 'diastolic_bp' => 'nullable|integer',
                 'temperature' => 'nullable|numeric',
                 'pulse' => 'nullable|integer',
+                'amniotic_fluid' => 'nullable|in:intact,clair,meconial+,meconial++,meconial+++,sanglant',
+                'fetal_heart_deceleration' => 'nullable|in:aucun,precoce,tardif,variable',
+                'fetal_position' => 'nullable|in:anterieure,posterieure,transverse',
+                'caput' => 'nullable|in:0,+,++,+++',
+                'moulding' => 'nullable|in:0,+,++,+++',
+                'urines' => 'nullable|in:acetone,proteine',
                 'notes' => 'nullable|string',
                 'observed_at' => 'nullable|date',
                 'updated_at' => 'nullable|date',
@@ -161,26 +102,27 @@ class ObservationController extends Controller
                 'diastolic_bp' => $data['diastolic_bp'] ?? null,
                 'temperature' => $data['temperature'] ?? null,
                 'pulse' => $data['pulse'] ?? null,
+                'amniotic_fluid' => $data['amniotic_fluid'] ?? null,
+                'fetal_heart_deceleration' => $data['fetal_heart_deceleration'] ?? null,
+                'fetal_position' => $data['fetal_position'] ?? null,
+                'caput' => $data['caput'] ?? null,
+                'moulding' => $data['moulding'] ?? null,
+                'urines' => $data['urines'] ?? null,
                 'notes' => $data['notes'] ?? null,
                 'observed_at' => $data['observed_at'] ?? now(),
                 'synced' => true,
             ]);
 
-            // ✅ try/catch isolé autour de checkAlerts() pour localiser précisément
-            // si le crash vient de la création de l'observation ou de l'alerte
             try {
-                $this->checkAlerts($observation);
+                AlertService::analyse($labour, $observation->toArray());
+                PartographService::analyse($labour);
             } catch (\Throwable $e) {
                 return response()->json([
-                    'message' => 'DEBUG ERROR DANS CHECKALERTS',
+                    'message' => 'DEBUG ERROR DANS ALERTS',
                     'error' => $e->getMessage(),
                     'file' => basename($e->getFile()),
                     'line' => $e->getLine(),
                     'observation_id' => $observation->id,
-                    'observation_district' => $observation->district,
-                    'observation_user_id' => $observation->user_id,
-                    'observation_temperature' => $observation->temperature,
-                    'observation_poste_de_sante' => $observation->poste_de_sante,
                 ], 500);
             }
 
@@ -205,7 +147,7 @@ class ObservationController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        if ($user->isSuperviseur()) {
+        if ($user->isAnySuperviseur()) {
             return response()->json(['message' => 'Les superviseurs ne peuvent pas modifier une observation'], 403);
         }
 
@@ -221,19 +163,38 @@ class ObservationController extends Controller
         }
 
         $request->validate([
-            'dilation' => 'nullable|numeric',
-            'fcf' => 'nullable|integer',
-            'contractions' => 'nullable|integer',
-            'station' => 'nullable|integer',
+            'dilation' => 'nullable|numeric|min:0|max:10',
+            'fcf' => 'nullable|integer|min:60|max:220',
+            'contractions' => 'nullable|integer|min:0',
+            'station' => 'nullable|integer|min:-3|max:3',
             'systolic_bp' => 'nullable|integer',
             'diastolic_bp' => 'nullable|integer',
             'temperature' => 'nullable|numeric',
             'pulse' => 'nullable|integer',
+            'amniotic_fluid' => 'nullable|in:intact,clair,meconial+,meconial++,meconial+++,sanglant',
+            'fetal_heart_deceleration' => 'nullable|in:aucun,precoce,tardif,variable',
+            'fetal_position' => 'nullable|in:anterieure,posterieure,transverse',
+            'caput' => 'nullable|in:0,+,++,+++',
+            'moulding' => 'nullable|in:0,+,++,+++',
+            'urines' => 'nullable|in:acetone,proteine',
             'observed_at' => 'nullable|date',
             'notes' => 'nullable|string',
         ]);
 
         $obs->update($request->all());
+
+        try {
+            AlertService::analyse($labour, $obs->toArray());
+            PartographService::analyse($labour);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'DEBUG ERROR DANS ALERTS',
+                'error' => $e->getMessage(),
+                'file' => basename($e->getFile()),
+                'line' => $e->getLine(),
+                'observation_id' => $obs->id,
+            ], 500);
+        }
 
         return response()->json($obs);
     }
@@ -243,7 +204,7 @@ class ObservationController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        if ($user->isSuperviseur()) {
+        if ($user->isAnySuperviseur()) {
             return response()->json(['message' => 'Les superviseurs ne peuvent pas supprimer une observation'], 403);
         }
 
@@ -268,7 +229,7 @@ class ObservationController extends Controller
             $query->whereHas('labour', function ($q) use ($user) {
                 $q->where('district', $user->district);
             });
-        } elseif (! $user->isAdmin()) {
+        } elseif (! $user->isAdmin() && ! $user->isSuperviseurRegional()) {
             $query->whereHas('labour', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             });

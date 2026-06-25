@@ -19,6 +19,7 @@ return new class extends Migration
     $table->enum('role', [
         'sage_femme',
         'superviseur',
+        'superviseur_regional',
         'admin'
     ])->default('sage_femme');
 

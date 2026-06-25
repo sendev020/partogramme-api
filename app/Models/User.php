@@ -49,6 +49,16 @@ class User extends Authenticatable
         return $this->role === 'superviseur';
     }
 
+    public function isSuperviseurRegional(): bool
+    {
+        return $this->role === 'superviseur_regional';
+    }
+
+    public function isAnySuperviseur(): bool
+    {
+        return $this->isSuperviseur() || $this->isSuperviseurRegional();
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

@@ -42,7 +42,7 @@ class LabourController extends Controller
     /** @var User $user */
     $user = Auth::user();
 
-    if ($user->isAdmin()) {
+    if ($user->isAdmin() || $user->isSuperviseurRegional()) {
         // ✅ Admin : libre, filtre optionnel par district ET/OU poste_de_sante
         if ($request->filled('district')) {
             $query->where('district', $request->district);
@@ -241,7 +241,7 @@ class LabourController extends Controller
 
     $query = DB::table('labours');
 
-    if ($user->isAdmin()) {
+    if ($user->isAdmin() || $user->isSuperviseurRegional()) {
         if ($request->filled('district')) {
             $query->where('district', $request->district);
         }
@@ -290,7 +290,7 @@ public function store(Request $request)
     $user = Auth::user();
 
     // ✅ Blocage explicite : superviseur ne peut jamais créer
-    if ($user->isSuperviseur()) {
+    if ($user->isAnySuperviseur()) {
         return response()->json(['message' => 'Les superviseurs ne peuvent pas créer de labour'], 403);
     }
 
@@ -333,7 +333,7 @@ public function update(Request $request, $id)
     $user = Auth::user();
 
     // ✅ Blocage explicite : superviseur ne peut jamais modifier
-    if ($user->isSuperviseur()) {
+    if ($user->isAnySuperviseur()) {
         return response()->json(['message' => 'Les superviseurs ne peuvent pas modifier un labour'], 403);
     }
 
@@ -371,7 +371,7 @@ public function destroy($id)
     $user = Auth::user();
 
     // ✅ Blocage explicite : superviseur ne peut jamais supprimer
-    if ($user->isSuperviseur()) {
+    if ($user->isAnySuperviseur()) {
         return response()->json(['message' => 'Les superviseurs ne peuvent pas supprimer un labour'], 403);
     }
 

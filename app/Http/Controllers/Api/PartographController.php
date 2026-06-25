@@ -18,6 +18,7 @@ class PartographController extends Controller
 
         // ✅ Vérifier la visibilité avant de renvoyer les données
         $authorized = $user->isAdmin()
+            || $user->isSuperviseurRegional()
             || ($user->isSuperviseur() && $labour->district === $user->district)
             || ($labour->user_id === $user->id);
 
@@ -26,8 +27,8 @@ class PartographController extends Controller
         }
 
         $observations = Observation::where('labour_id', $labour->id)
-            ->orderBy('created_at')
-            ->get(['created_at', 'dilation']);
+            ->orderBy('observed_at')
+            ->get(['observed_at', 'dilation']);
 
         if (! $labour->active_phase_start) {
             return response()->json(['data' => []]);
@@ -36,8 +37,10 @@ class PartographController extends Controller
         $start = Carbon::parse($labour->active_phase_start);
 
         $points = $observations->map(function ($obs) use ($start) {
+            $observedAt = Carbon::parse($obs->observed_at);
+
             return [
-                'hour' => round($start->diffInMinutes($obs->created_at) / 60, 2),
+                'hour' => round($start->diffInMinutes($observedAt) / 60, 2),
                 'dilation' => $obs->dilation,
             ];
         });

@@ -31,7 +31,7 @@ class PatientController extends Controller
     /** @var User $user */
     $user = Auth::user();
 
-    if ($user->isAdmin()) {
+    if ($user->isAdmin() || $user->isSuperviseurRegional()) {
         if ($request->filled('district')) {
             $query->where('district', $request->district);
         }
@@ -74,7 +74,7 @@ public function index(Request $request)
         $user = Auth::user();
 
         // ✅ Blocage explicite : superviseur ne peut jamais créer
-        if ($user->isSuperviseur()) {
+        if ($user->isAnySuperviseur()) {
             return response()->json(['message' => 'Les superviseurs ne peuvent pas créer de patiente'], 403);
         }
 
@@ -110,7 +110,7 @@ public function index(Request $request)
         $user = Auth::user();
 
         // ✅ Blocage explicite : superviseur ne peut jamais modifier
-        if ($user->isSuperviseur()) {
+        if ($user->isAnySuperviseur()) {
             return response()->json(['message' => 'Les superviseurs ne peuvent pas modifier une patiente'], 403);
         }
 
@@ -150,7 +150,7 @@ public function index(Request $request)
         $user = Auth::user();
 
         // ✅ Blocage explicite : superviseur ne peut jamais supprimer
-        if ($user->isSuperviseur()) {
+        if ($user->isAnySuperviseur()) {
             return response()->json(['message' => 'Les superviseurs ne peuvent pas supprimer une patiente'], 403);
         }
 

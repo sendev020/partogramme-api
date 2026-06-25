@@ -22,7 +22,7 @@ class SyncController extends Controller
 
             if ($user->isSuperviseur()) {
                 $labourQuery->where('district', $user->district);
-            } elseif (! $user->isAdmin()) {
+            } elseif (! $user->isAdmin() && ! $user->isSuperviseurRegional()) {
                 $labourQuery->where('user_id', $user->id);
             }
 

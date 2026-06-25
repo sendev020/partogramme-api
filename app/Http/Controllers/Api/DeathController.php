@@ -19,7 +19,7 @@ class DeathController extends Controller
 
         if ($user->isSuperviseur()) {
             $query->where('district', $user->district);
-        } elseif (! $user->isAdmin()) {
+        } elseif (! $user->isAdmin() && ! $user->isSuperviseurRegional()) {
             $query->where('user_id', $user->id);
         }
 
@@ -32,7 +32,7 @@ class DeathController extends Controller
     $user = Auth::user();
 
     // ✅ Blocage explicite : superviseur ne peut jamais créer
-    if ($user->isSuperviseur()) {
+    if ($user->isAnySuperviseur()) {
         return response()->json(['message' => 'Les superviseurs ne peuvent pas enregistrer un décès'], 403);
     }
 
