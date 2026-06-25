@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\ReferralController;
 use App\Http\Controllers\Api\SupportCareController;
 use App\Http\Controllers\Api\MedicamentController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,6 +34,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | GESTION DES UTILISATEURS (admin)
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store']);
+    Route::get('/users/{id}', [UserController::class, 'show']);
+    Route::put('/users/{id}', [UserController::class, 'update']);
+    Route::delete('/users/{id}', [UserController::class, 'destroy']);
 
     /*
     |--------------------------------------------------------------------------
