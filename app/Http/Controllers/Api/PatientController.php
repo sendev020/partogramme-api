@@ -10,29 +10,63 @@ use Illuminate\Support\Facades\Auth;
 
 class PatientController extends Controller
 {
-    private function applyVisibilityScope($query)
-    {
-        /** @var User|null $user */
-        $user = Auth::user();
+    // private function applyVisibilityScope($query)
+    // {
+    //     /** @var User|null $user */
+    //     $user = Auth::user();
 
-        if ($user->isAdmin()) {
-            return $query;
+    //     if ($user->isAdmin()) {
+    //         return $query;
+    //     }
+
+    //     if ($user->isSuperviseur()) {
+    //         return $query->where('district', $user->district);
+    //     }
+
+    //     return $query->where('user_id', $user->id);
+    // }
+
+    private function applyVisibilityScope($query, Request $request)
+{
+    /** @var User $user */
+    $user = Auth::user();
+
+    if ($user->isAdmin()) {
+        if ($request->filled('district')) {
+            $query->where('district', $request->district);
         }
-
-        if ($user->isSuperviseur()) {
-            return $query->where('district', $user->district);
+        if ($request->filled('poste_de_sante')) {
+            $query->where('poste_de_sante', $request->poste_de_sante);
         }
-
-        return $query->where('user_id', $user->id);
+        return $query;
     }
 
-    public function index()
-    {
-        $query = Patient::query();
-        $query = $this->applyVisibilityScope($query);
-
-        return $query->orderBy('created_at', 'desc')->get();
+    if ($user->isSuperviseur()) {
+        $query->where('district', $user->district);
+        if ($request->filled('poste_de_sante')) {
+            $query->where('poste_de_sante', $request->poste_de_sante);
+        }
+        return $query;
     }
+
+    return $query->where('user_id', $user->id);
+}
+
+public function index(Request $request)
+{
+    $query = Patient::query();
+    $query = $this->applyVisibilityScope($query, $request);
+
+    return $query->orderBy('created_at', 'desc')->get();
+}
+
+    // public function index()
+    // {
+    //     $query = Patient::query();
+    //     $query = $this->applyVisibilityScope($query);
+
+    //     return $query->orderBy('created_at', 'desc')->get();
+    // }
 
     public function store(Request $request)
     {

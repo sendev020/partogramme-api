@@ -10,6 +10,10 @@ use App\Http\Controllers\Api\PartographController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\ReferralController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -94,4 +98,24 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/deliveries', [DeliveryController::class, 'index']);
     Route::get('/deliveries/{id}', [DeliveryController::class, 'show']);
     Route::post('/deliveries', [DeliveryController::class, 'store']);
+
+
+
+    // Dans un contrôleur approprié, ou directement dans une route
+    Route::get('/postes-de-sante', function (Request $request) {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $query = User::query()->whereNotNull('poste_de_sante');
+
+        if ($user->isSuperviseur()) {
+            $query->where('district', $user->district);
+        } elseif ($user->isAdmin() && $request->filled('district')) {
+            $query->where('district', $request->district);
+        }
+
+        $postes = $query->distinct()->pluck('poste_de_sante');
+
+        return response()->json($postes);
+    });
 });
