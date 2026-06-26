@@ -27,8 +27,8 @@ return new class extends Migration
             $table->enum('moulding', ['0', '+', '++','+++'])->nullable();
 
 
-            // urines
-            $table->string('urines')->nullable();
+            // // urines
+            // $table->string('urines')->nullable();
     });
 }
 
@@ -53,9 +53,9 @@ return new class extends Migration
             if (Schema::hasColumn('observations', 'moulding')) {
                 $table->dropColumn('moulding');
             }
-            if (Schema::hasColumn('observations', 'urines')) {
-                $table->dropColumn('urines');
-            }
+            // if (Schema::hasColumn('observations', 'urines')) {
+            //     $table->dropColumn('urines');
+            // }
         });
     }
 };
