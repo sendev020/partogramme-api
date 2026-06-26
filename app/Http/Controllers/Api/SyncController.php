@@ -43,6 +43,16 @@ class SyncController extends Controller
                     'temperature' => $obs['temperature'],
                     'systolic_bp' => $obs['systolic_bp'],
                     'diastolic_bp' => $obs['diastolic_bp'],
+                    'pulse' => $obs['pulse'],
+                    'amniotic_fluid' => $obs['amniotic_fluid'],
+                    'fetal_heart_deceleration' => $obs['fetal_heart_deceleration'],
+                    'fetal_position' => $obs['fetal_position'],
+                    'caput' => $obs['caput'],
+                    'moulding' => $obs['moulding'],
+                    'urines' => $obs['urines'],
+                    'notes' => $obs['notes'],
+                    'observed_at' => $obs['observed_at'],
+                    'user_id' => $user->id,
                 ]
             );
 

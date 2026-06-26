@@ -42,13 +42,13 @@ return new class extends Migration
             $table->decimal('temperature', 4, 1)->nullable();
             $table->integer('pulse')->nullable();
             // Liquide amniotique
-            $table->enum('amniotic_fluid', ['intact', 'clair', 'meconial+', 'meconial++', 'meconial+++','sanglant'])->nullable();
+            $table->enum('amniotic_fluid', ['Intact', 'Clair', 'Meconial+', 'Meconial++', 'Meconial+++','Sanglant'])->nullable();
 
             // Ralentissement RCF
-            $table->enum('fetal_heart_deceleration', ['aucun', 'precoce', 'tardif', 'variable'])->nullable();
+            $table->enum('fetal_heart_deceleration', ['Aucun', 'Precoce', 'Tardif', 'Variable'])->nullable();
 
             // Position fœtale
-            $table->enum('fetal_position', ['anterieure', 'posterieure', 'transverse'])->nullable();
+            $table->enum('fetal_position', ['Anterieure', 'Posterieure', 'Transverse'])->nullable();
 
             // Bosse sérosanguine
             $table->enum('caput', ['0', '+', '++','+++'])->nullable();
@@ -56,8 +56,9 @@ return new class extends Migration
             // Modelage
             $table->enum('moulding', ['0', '+', '++','+++'])->nullable();
 
+
             // urines
-            $table->enum('urines', ['acetone', 'proteine'])->nullable();
+            $table->string('urines')->nullable();
 
             // 📝 NOTES
             $table->text('notes')->nullable();

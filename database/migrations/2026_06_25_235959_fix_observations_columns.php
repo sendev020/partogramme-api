@@ -22,7 +22,7 @@ return new class extends Migration
             }
 
             if (! Schema::hasColumn('observations', 'urines')) {
-                $table->enum('urines', ['acetone', 'proteine'])->nullable()->after('moulding');
+                $table->string('urines')->nullable()->after('moulding');
             }
         });
     }
