@@ -65,10 +65,10 @@ class ObservationController extends Controller
             $data = $request->validate([
                 'local_id' => 'nullable|integer',
                 'labour_id' => 'required|exists:labours,id',
-                'dilation' => 'nullable|numeric|min:0|max:10',
-                'contractions' => 'nullable|integer|min:0',
-                'fcf' => 'nullable|integer|min:60|max:220',
-                'station' => 'nullable|integer|min:-3|max:3',
+                'dilation' => 'nullable|numeric',
+                'contractions' => 'nullable|integer',
+                'fcf' => 'nullable|integer',
+                'station' => 'nullable|integer',
                 'systolic_bp' => 'nullable|integer',
                 'diastolic_bp' => 'nullable|integer',
                 'temperature' => 'nullable|numeric',
@@ -163,10 +163,10 @@ class ObservationController extends Controller
         }
 
         $request->validate([
-            'dilation' => 'nullable|numeric|min:0|max:10',
-            'fcf' => 'nullable|integer|min:60|max:220',
-            'contractions' => 'nullable|integer|min:0',
-            'station' => 'nullable|integer|min:-3|max:3',
+            'dilation' => 'nullable|numeric',
+            'fcf' => 'nullable|integer',
+            'contractions' => 'nullable|integer',
+            'station' => 'nullable|integer',
             'systolic_bp' => 'nullable|integer',
             'diastolic_bp' => 'nullable|integer',
             'temperature' => 'nullable|numeric',
