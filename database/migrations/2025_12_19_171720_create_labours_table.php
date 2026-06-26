@@ -34,6 +34,10 @@ return new class extends Migration
 
             $table->boolean('synced')->default(false);
 
+            if (! Schema::hasColumn('labours', 'active_phase_start')) {
+                $table->dateTime('active_phase_start')->nullable()->after('end_time');
+            }
+
             $table->timestamps();
         });
     }
