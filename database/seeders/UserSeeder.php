@@ -61,7 +61,7 @@ class UserSeeder extends Seeder
             'email' => 'superviseur.regional@partogramme.test',
             'password' => Hash::make('password123'),
             'role' => 'superviseur_regional',
-            'district' => 'Sedhiou', // peut superviser tous les districts, mais on lui attribue un district par défaut
+            'district' => null,
             'poste_de_sante' => null,
             'phone' => '770000004',
             'is_active' => true,
