@@ -24,6 +24,9 @@ return new class extends Migration
             if (! Schema::hasColumn('observations', 'urines')) {
                 $table->string('urines')->nullable()->after('moulding');
             }
+            if (! Schema::hasColumn('observations', 'amniotic_fluid')) {
+                $table->string('amniotic_fluid')->nullable()->after('urines');
+            }
         });
     }
 
@@ -44,6 +47,9 @@ return new class extends Migration
 
             if (Schema::hasColumn('observations', 'urines')) {
                 $table->dropColumn('urines');
+            }
+            if (Schema::hasColumn('observations', 'amniotic_fluid')) {
+                $table->dropColumn('amniotic_fluid','amniotic_fluid');
             }
         });
     }
