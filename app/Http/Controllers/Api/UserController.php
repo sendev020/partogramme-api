@@ -82,6 +82,7 @@ class UserController extends Controller
                 'role' => 'required|in:admin,superviseur,superviseur_regional,sage_femme',
                 'district' => 'nullable|string|max:255',
                 'poste_de_sante' => 'nullable|string|max:255',
+                'is_active' => 'nullable|boolean',
             ]);
         } catch (ValidationException $e) {
             return response()->json([
@@ -98,6 +99,7 @@ class UserController extends Controller
                 'role' => $validated['role'],
                 'district' => $validated['district'] ?? null,
                 'poste_de_sante' => $validated['poste_de_sante'] ?? null,
+                'is_active' => isset($validated['is_active']) ? ($validated['is_active'] ? 1 : 0) : 0,
             ]);
 
             return response()->json($newUser, 201);
@@ -132,6 +134,7 @@ class UserController extends Controller
                 'role' => 'nullable|in:admin,superviseur,superviseur_regional,sage_femme',
                 'district' => 'nullable|string|max:255',
                 'poste_de_sante' => 'nullable|string|max:255',
+                'is_active' => 'nullable|boolean',
             ]);
         } catch (ValidationException $e) {
             return response()->json([

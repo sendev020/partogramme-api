@@ -20,6 +20,7 @@ class User extends Authenticatable
         'poste_de_sante',
         'phone',
         'is_active',
+        'last_login_at',
     ];
 
     protected $hidden = [
