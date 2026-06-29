@@ -25,7 +25,6 @@ class Labour extends Model
         'membranes_ruptured',
         'membranes_rupture_at',
         'membranes_rupture_unknown',
-        'operation',
     ];
 
     public function patient()

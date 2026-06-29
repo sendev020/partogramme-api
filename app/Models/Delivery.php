@@ -28,7 +28,6 @@ class Delivery extends Model
         'uterine_tone_checked',
         'placenta_complete',
         'estimated_blood_loss_ml',
-        'operation',
         'synced',
     ];
 

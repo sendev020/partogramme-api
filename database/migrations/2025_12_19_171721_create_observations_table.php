@@ -63,12 +63,12 @@ return new class extends Migration
             $table->text('maternal_position')->nullable();
             $table->text('oral_fluids')->nullable();
             $table->text('iv_fluids')->nullable();
-            $table->text('oxytocin_rate')->nullable();
+            $table->integer('oxytocin_ui_per_l')->nullable();
+            $table->integer('oxytocin_drops_per_min')->nullable();
             $table->text('analgesia')->nullable();
             $table->text('drugs')->nullable();
             $table->string('evaluation')->nullable();
             $table->string('care_plan')->nullable();
-            $table->string('operation')->nullable();
 
             // 📝 NOTES
             $table->text('notes')->nullable();

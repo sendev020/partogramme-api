@@ -72,6 +72,7 @@ class MedicamentController extends Controller
             'administered_at' => 'nullable|date',
             'indication' => 'nullable|string',
             'notes' => 'nullable|string',
+            
         ]);
 
         $labour = Labour::find($validated['labour_id']);

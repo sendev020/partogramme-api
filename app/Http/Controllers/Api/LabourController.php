@@ -235,7 +235,6 @@ public function store(Request $request)
         'membranes_ruptured_at' => $request->membranes_ruptured_at ?? null,
         'membranes_rupture_at' => $request->membranes_rupture_at ?? null,
         'membranes_rupture_unknown' => $request->membranes_rupture_unknown ?? null,
-        'operation' => $request->operation ?? null,
     ]);
 
     return response()->json($labour, 201);

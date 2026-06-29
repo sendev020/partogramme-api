@@ -10,21 +10,6 @@ use Illuminate\Support\Facades\Auth;
 
 class PatientController extends Controller
 {
-    // private function applyVisibilityScope($query)
-    // {
-    //     /** @var User|null $user */
-    //     $user = Auth::user();
-
-    //     if ($user->isAdmin()) {
-    //         return $query;
-    //     }
-
-    //     if ($user->isSuperviseur()) {
-    //         return $query->where('district', $user->district);
-    //     }
-
-    //     return $query->where('user_id', $user->id);
-    // }
 
     private function applyVisibilityScope($query, Request $request)
 {
@@ -60,13 +45,6 @@ public function index(Request $request)
     return $query->orderBy('created_at', 'desc')->get();
 }
 
-    // public function index()
-    // {
-    //     $query = Patient::query();
-    //     $query = $this->applyVisibilityScope($query);
-
-    //     return $query->orderBy('created_at', 'desc')->get();
-    // }
 
     public function store(Request $request)
     {
