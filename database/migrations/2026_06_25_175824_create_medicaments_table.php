@@ -28,6 +28,11 @@ return new class extends Migration
             $table->text('indication')->nullable();
             $table->text('notes')->nullable();
 
+            $table->boolean('synced')->default(false);
+            $table->string('created_at')->nullable();
+            $table->string('updated_at')->nullable();
+            $table->string('deleted_at')->nullable();
+
             $table->timestamps();
         });
     }

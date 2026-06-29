@@ -34,6 +34,24 @@ return new class extends Migration
 
             $table->boolean('synced')->default(false);
 
+            $table->string('labor_onset')->nullable();
+
+            $table->string('active_phase_diagnosis_at')->nullable();
+
+            $table->integer('membranes_ruptured')->nullable();
+
+            $table->string('membranes_rupture_at')->nullable();
+
+            $table->integer('membranes_rupture_unknown')->nullable();
+
+            $table->string('created_at')->nullable();
+
+            $table->string('updated_at')->nullable();
+
+            $table->string('deleted_at')->nullable();
+
+            $table->string('operation')->nullable();
+
             if (! Schema::hasColumn('labours', 'active_phase_start')) {
                 $table->dateTime('active_phase_start')->nullable()->after('end_time');
             }

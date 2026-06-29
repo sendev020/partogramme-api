@@ -34,6 +34,9 @@ return new class extends Migration
             $table->string('cause_deces')->nullable(); // e.g., 'complications', 'infection', etc.
             $table->dateTime('heure_deces')->nullable(); // Date and time of death
             $table->text('notes')->nullable(); // Additional notes about the death
+            $table->string('created_at')->nullable();
+            $table->string('updated_at')->nullable();
+            $table->string('deleted_at')->nullable();
             $table->timestamps();
         });
     }

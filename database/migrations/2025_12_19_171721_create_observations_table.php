@@ -60,6 +60,19 @@ return new class extends Migration
             // urines
             $table->string('urines')->nullable();
 
+            $table->text('maternal_position')->nullable();
+            $table->text('oral_fluids')->nullable();
+            $table->text('iv_fluids')->nullable();
+            $table->text('oxytocin_rate')->nullable();
+            $table->text('analgesia')->nullable();
+            $table->text('drugs')->nullable();
+            $table->string('evaluation')->nullable();
+            $table->string('care_plan')->nullable();
+
+            $table->string('created_at')->nullable();
+            $table->string('updated_at')->nullable();
+            $table->string('deleted_at')->nullable();
+
             // 📝 NOTES
             $table->text('notes')->nullable();
 

@@ -18,6 +18,10 @@ class SupportCare extends Model
         'pain_relief',
         'notes',
         'recorded_at',
+        'synced',
+        'created_at',
+        'updated_at',
+        'deleted_at',
     ];
 
     protected $casts = [

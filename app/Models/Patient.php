@@ -20,7 +20,10 @@ class Patient extends Model
         'gestational_age',
         'risk_factors',
         'synced',
-        'server_id',
+        'server_id'        ,
+        'created_at',
+        'updated_at',
+        'deleted_at',
     ];
 
     public function user()

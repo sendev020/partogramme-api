@@ -13,29 +13,6 @@ use App\Models\User;
 
 class LabourController extends Controller
 {
-    /**
-     * ✅ Applique le filtrage de visibilité selon le rôle de l'utilisateur connecté
-     * - sage_femme  → uniquement ses propres labours
-     * - superviseur → tous les labours de son district
-     * - admin       → tous les labours, tous districts
-     */
-    // private function applyVisibilityScope($query)
-    // {
-    //     /** @var User|null $user */
-    //     $user = Auth::user();
-
-    //     if ($user->isAdmin()) {
-    //         // Aucun filtre supplémentaire
-    //         return $query;
-    //     }
-
-    //     if ($user->isSuperviseur()) {
-    //         return $query->where('district', $user->district);
-    //     }
-
-    //     // sage_femme (par défaut) → uniquement ses propres labours
-    //     return $query->where('user_id', $user->id);
-    // }
 
     private function applyVisibilityScope($query, Request $request)
 {
@@ -65,38 +42,6 @@ class LabourController extends Controller
     // sage_femme : ses propres données uniquement, pas de filtre pertinent
     return $query->where('user_id', $user->id);
 }
-    // Liste complète (alias) — respecte aussi le scope
-    // public function allLabours()
-    // {
-    //     $query = Labour::with('patient');
-    //     $query = $this->applyVisibilityScope($query);
-
-    //     $labours = $query->orderBy('created_at', 'desc')->get();
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'data' => $labours,
-    //     ]);
-    // }
-
-    // Liste filtrée des accouchements
-    // public function index(Request $request)
-    // {
-    //     $query = Labour::query();
-    //     $query = $this->applyVisibilityScope($query);
-
-    //     if ($request->filled('status')) {
-    //         $query->where('status', $request->status);
-    //     }
-
-    //     if ($request->filled('date')) {
-    //         $query->whereDate('start_time', $request->date);
-    //     }
-
-    //     $labours = $query->with('patient')->orderBy('start_time', 'desc')->get();
-
-    //     return response()->json($labours);
-    // }
 
     // Accouchements en cours
     public function ongoing(Request $request)
@@ -194,43 +139,6 @@ class LabourController extends Controller
         return response()->json($labour);
     }
 
-    //public function monthlyStats()
-    // {
-    //     /** @var User|null $user */
-    //     $user = Auth::user();
-
-    //     $query = DB::table('labours');
-
-    //     if ($user->isSuperviseur()) {
-    //         $query->where('district', $user->district);
-    //     } elseif (! $user->isAdmin()) {
-    //         $query->where('user_id', $user->id);
-    //     }
-    //     // admin → pas de filtre
-
-    //     $stats = $query
-    //         ->selectRaw("
-    //             DATE_FORMAT(start_time, '%Y-%m') as month,
-    //             SUM(CASE WHEN status = 'en_cours' THEN 1 ELSE 0 END) as en_cours,
-    //             SUM(CASE WHEN status = 'refere' THEN 1 ELSE 0 END) as refere,
-    //             SUM(CASE WHEN status = 'termine' THEN 1 ELSE 0 END) as termine,
-    //             SUM(CASE WHEN status = 'delivery' THEN 1 ELSE 0 END) as delivery,
-    //             SUM(CASE WHEN status = 'death' THEN 1 ELSE 0 END) as death
-    //         ")
-    //         ->groupBy('month')
-    //         ->orderBy('month')
-    //         ->get();
-
-    //     $formatted = $stats->map(function ($s) {
-    //         return [
-    //             'month' => date('M', strtotime($s->month.'-01')),
-    //             'en_cours' => (int) $s->en_cours,
-    //             'refere' => (int) $s->refere,
-    //             'termine' => (int) $s->termine,
-    //             'delivery' => (int) $s->delivery,
-    //             'death' => (int) $s->death,
-    //         ];
-    //     });
 
     //     return response()->json($formatted);
     //}
@@ -322,6 +230,12 @@ public function store(Request $request)
         'poste_de_sante' => $user->poste_de_sante,
         'start_time' => $request->start_time,
         'status' => 'en_cours',
+        'labor_onset' => $request->labor_onset ?? null,
+        'active_phase_diagnosis_at' => $request->active_phase_diagnosis_at ?? null,
+        'membranes_ruptured_at' => $request->membranes_ruptured_at ?? null,
+        'membranes_rupture_at' => $request->membranes_rupture_at ?? null,
+        'membranes_rupture_unknown' => $request->membranes_rupture_unknown ?? null,
+        'operation' => $request->operation ?? null,
     ]);
 
     return response()->json($labour, 201);

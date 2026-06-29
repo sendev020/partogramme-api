@@ -28,6 +28,9 @@ return new class extends Migration
             $table->boolean('resolved')->default(false);
 
             $table->boolean('synced')->default(false);
+            $table->string('created_at')->nullable();
+            $table->string('updated_at')->nullable();
+            $table->string('deleted_at')->nullable();
 
             $table->timestamps();
         });

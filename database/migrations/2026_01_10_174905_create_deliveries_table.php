@@ -38,8 +38,22 @@ return new class extends Migration
             $table->float('poids'); // in kilograms
              $table->dateTime('heure_naissance'); // in hours (e.g., 14.5 for 2:30 PM)
             $table->string('notes')->nullable(); // Additional notes about the delivery
-            $table->string('complications'); // e.g., 'none', 'breech_birth', etc.
-            $table->string('soins_administres'); // e.g., '
+            $table->string('complications')->nullable(); // e.g., 'none', 'breech_birth', etc.
+            $table->string('soins_administres')->nullable(); // e.g., '
+            $table->string('uterotonic_given')->nullable(); // e.g., 'yes', 'no'
+            $table->string('uterotonic_type')->nullable();
+            $table->string('cord_clamping_time')->nullable();
+            $table->integer('controlled_cord_traction')->nullable();
+            $table->integer('uterine_massage')->nullable();
+            $table->integer('uterine_tone_checked')->nullable();
+            $table->string('placenta_complete')->nullable();
+            $table->integer('estimated_blood_loss_ml')->nullable();
+
+            $table->string('created_at')->nullable();
+            $table->string('updated_at')->nullable();
+            $table->string('deleted_at')->nullable();
+
+
             $table->timestamps();
         });
     }

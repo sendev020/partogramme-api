@@ -27,9 +27,21 @@ class Observation extends Model
         'caput',
         'moulding',
         'urines',
+        'maternal_position',
+        'oral_fluids',
+        'iv_fluids',
+        'oxytocin_rate',
+        'analgesia',
+        'drugs',
+        'evalution',
+        'care_plan',
+        'operation',
         'notes',
         'observed_at',
         'synced',
+        'created_at',
+        'updated_at',
+        'deleted_at',
     ];
 
     protected $casts = [

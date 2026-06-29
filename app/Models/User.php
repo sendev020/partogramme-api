@@ -21,6 +21,9 @@ class User extends Authenticatable
         'phone',
         'is_active',
         'last_login_at',
+        'created_at',
+        'updated_at',
+        'deleted_at',
     ];
 
     protected $hidden = [
