@@ -33,7 +33,7 @@ class Observation extends Model
         'oxytocin_rate',
         'analgesia',
         'drugs',
-        'evalution',
+        'evaluation',
         'care_plan',
         'operation',
         'notes',
