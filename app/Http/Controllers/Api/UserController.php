@@ -154,7 +154,14 @@ class UserController extends Controller
                 $validated['password'] = Hash::make($validated['password']);
             }
 
-            $targetUser->update(array_filter($validated));
+            //$targetUser->update(array_filter($validated));
+
+            $targetUser->update(
+                array_filter(
+                    $validated,
+                    fn($value) => $value !== null
+                )
+            );
 
             return response()->json($targetUser, 200);
         } catch (\Exception $e) {
