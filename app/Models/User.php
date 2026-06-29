@@ -28,6 +28,11 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $casts = [
+        'is_active' => 'boolean',
+        'last_login_at' => 'datetime',
+    ];
+
     // ✅ Relations
     public function patients()
     {
