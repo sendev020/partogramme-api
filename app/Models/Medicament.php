@@ -20,9 +20,6 @@ class Medicament extends Model
         'indication',
         'notes',
         'synced',
-        'created_at',
-        'updated_at',
-        'deleted_at',
     ];
 
     public function labour()

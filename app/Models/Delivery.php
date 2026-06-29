@@ -30,9 +30,6 @@ class Delivery extends Model
         'estimated_blood_loss_ml',
         'operation',
         'synced',
-        'created_at',
-        'updated_at',
-        'deleted_at',
     ];
 
     // Relation avec le modèle Labour

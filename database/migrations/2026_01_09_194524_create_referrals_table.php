@@ -36,10 +36,6 @@ return new class extends Migration {
             // 👨‍⚕️ Personnel
             $table->string('referred_by')->nullable(); // sage-femme / médecin
 
-            $table->string('created_at')->nullable();
-            $table->string('updated_at')->nullable();
-            $table->string('deleted_at')->nullable();
-
             $table->timestamps();
         });
     }

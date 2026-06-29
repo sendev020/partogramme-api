@@ -44,12 +44,6 @@ return new class extends Migration
 
             $table->integer('membranes_rupture_unknown')->nullable();
 
-            $table->string('created_at')->nullable();
-
-            $table->string('updated_at')->nullable();
-
-            $table->string('deleted_at')->nullable();
-
             $table->string('operation')->nullable();
 
             if (! Schema::hasColumn('labours', 'active_phase_start')) {

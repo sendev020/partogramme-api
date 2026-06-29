@@ -37,10 +37,6 @@ return new class extends Migration
 
     $table->timestamp('last_login_at')->nullable();
 
-    // $table->string('created_at')->nullable();
-    // $table->string('updated_at')->nullable();
-    // $table->string('deleted_at')->nullable();
-
     $table->rememberToken();
 
     $table->timestamps();

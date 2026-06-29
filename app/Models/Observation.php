@@ -39,9 +39,6 @@ class Observation extends Model
         'notes',
         'observed_at',
         'synced',
-        'created_at',
-        'updated_at',
-        'deleted_at',
     ];
 
     protected $casts = [

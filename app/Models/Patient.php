@@ -21,9 +21,6 @@ class Patient extends Model
         'risk_factors',
         'synced',
         'server_id'        ,
-        'created_at',
-        'updated_at',
-        'deleted_at',
     ];
 
     public function user()

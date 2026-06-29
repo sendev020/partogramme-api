@@ -69,10 +69,6 @@ return new class extends Migration
             $table->string('evaluation')->nullable();
             $table->string('care_plan')->nullable();
 
-            $table->string('created_at')->nullable();
-            $table->string('updated_at')->nullable();
-            $table->string('deleted_at')->nullable();
-
             // 📝 NOTES
             $table->text('notes')->nullable();
 

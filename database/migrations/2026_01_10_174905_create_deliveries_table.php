@@ -48,12 +48,6 @@ return new class extends Migration
             $table->integer('uterine_tone_checked')->nullable();
             $table->string('placenta_complete')->nullable();
             $table->integer('estimated_blood_loss_ml')->nullable();
-
-            $table->string('created_at')->nullable();
-            $table->string('updated_at')->nullable();
-            $table->string('deleted_at')->nullable();
-
-
             $table->timestamps();
         });
     }

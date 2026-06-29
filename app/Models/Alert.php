@@ -9,7 +9,14 @@ class Alert extends Model
 {
     use SoftDeletes;
     protected $fillable = [
-        'labour_id', 'user_id','district','poste_de_sante', 'level', 'message', 'resolved','synced','created_at','updated_at','deleted_at',
+        'labour_id',
+        'user_id',
+        'district',
+        'poste_de_sante',
+        'level',
+        'message',
+        'resolved',
+        'synced',
     ];
 
     public function labour()

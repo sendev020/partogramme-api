@@ -19,9 +19,6 @@ class SupportCare extends Model
         'notes',
         'recorded_at',
         'synced',
-        'created_at',
-        'updated_at',
-        'deleted_at',
     ];
 
     protected $casts = [
