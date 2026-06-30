@@ -36,6 +36,7 @@ class Observation extends Model
         'drugs',
         'evaluation',
         'care_plan',
+        'companion_present',
         'notes',
         'observed_at',
         'synced',

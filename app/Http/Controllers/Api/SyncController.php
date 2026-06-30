@@ -59,6 +59,7 @@ class SyncController extends Controller
                     'drugs' => $obs['drugs'],
                     'evaluation' => $obs['evaluation'],
                     'care_plan' => $obs['care_plan'],
+                    'companion_present' => $obs['companion_present'],
                     'synced' => $obs['synced'] ?? false,
                     'created_at' => $obs['created_at'] ?? null,
                     'updated_at' => $obs['updated_at'] ?? null,

@@ -88,6 +88,7 @@ class ObservationController extends Controller
                 'drugs' => 'nullable|string',
                 'evaluation' => 'nullable|string',
                 'care_plan' => 'nullable|string',
+                'companion_present' => 'nullable|string',
                 'notes' => 'nullable|string',
                 'observed_at' => 'nullable|date',
                 'updated_at' => 'nullable|date',
@@ -126,6 +127,7 @@ class ObservationController extends Controller
                 'drugs' => $data['drugs'] ?? null,
                 'evaluation' => $data['evaluation'] ?? null,
                 'care_plan' => $data['care_plan'] ?? null,
+                'companion_present' => $data['companion_present'] ?? null,
                 'notes' => $data['notes'] ?? null,
                 'observed_at' => $data['observed_at'] ?? now(),
                 'synced' => true,
@@ -204,6 +206,7 @@ class ObservationController extends Controller
             'drugs' => 'nullable|string',
             'evaluation' => 'nullable|string',
             'care_plan' => 'nullable|string',
+            'companion_present' => 'nullable|string',
             'observed_at' => 'nullable|date',
             'notes' => 'nullable|string',
         ]);

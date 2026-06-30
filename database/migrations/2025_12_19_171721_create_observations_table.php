@@ -69,6 +69,7 @@ return new class extends Migration
             $table->text('drugs')->nullable();
             $table->string('evaluation')->nullable();
             $table->string('care_plan')->nullable();
+            $table->string('companion_present')->nullable();
 
             // 📝 NOTES
             $table->text('notes')->nullable();
