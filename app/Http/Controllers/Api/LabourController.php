@@ -232,7 +232,7 @@ public function store(Request $request)
         'status' => 'en_cours',
         'labor_onset' => $request->labor_onset ?? null,
         'active_phase_diagnosis_at' => $request->active_phase_diagnosis_at ?? null,
-        'membranes_ruptured_at' => $request->membranes_ruptured_at ?? null,
+        'membranes_ruptured' => $request->membranes_ruptured ?? null,
         'membranes_rupture_at' => $request->membranes_rupture_at ?? null,
         'membranes_rupture_unknown' => $request->membranes_rupture_unknown ?? null,
     ]);
