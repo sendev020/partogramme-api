@@ -82,7 +82,7 @@ class ObservationController extends Controller
                 'maternal_position' => 'nullable|string',
                 'oral_fluids' => 'nullable|string',
                 'iv_fluids' => 'nullable|string',
-                'oxytocin_ui_per_l' => 'nullable|ineger',
+                'oxytocin_ui_per_l' => 'nullable|integer',
                 'oxytocin_drops_per_min' => 'nullable|integer',
                 'analgesia' => 'nullable|string',
                 'drugs' => 'nullable|string',
