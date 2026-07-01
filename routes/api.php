@@ -69,9 +69,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/labours/{id}', [LabourController::class, 'show']);
     Route::put('/labours/{id}', [LabourController::class, 'update']);
     Route::post('/labours', [LabourController::class, 'store']);
-    Route::post('/labours/{labour}/close', [LabourController::class, 'close']);
-    Route::post('/labours/{id}/finish', [LabourController::class, 'finish']);
-    Route::get('/labours/{labour}/alerts', [LabourController::class, 'alerts']);
+    // Route::post('/labours/{labour}/close', [LabourController::class, 'close']);
+    // Route::post('/labours/{id}/finish', [LabourController::class, 'finish']);
+    //Route::get('/labours/{labour}/alerts', [LabourController::class, 'alerts']);
     Route::delete('/labours/{id}', [LabourController::class, 'destroy']);
 
     /*

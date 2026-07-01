@@ -36,13 +36,13 @@ return new class extends Migration
 
             $table->string('labor_onset')->nullable();
 
-            $table->string('active_phase_diagnosis_at')->nullable();
+            $table->dateTime('active_phase_diagnosis_at')->nullable();
 
-            $table->integer('membranes_ruptured')->nullable();
+            $table->boolean('membranes_ruptured')->nullable();
 
-            $table->string('membranes_rupture_at')->nullable();
+            $table->dateTime('membranes_rupture_at')->nullable();
 
-            $table->integer('membranes_rupture_unknown')->nullable();
+            $table->boolean('membranes_rupture_unknown')->nullable();
 
 
             if (! Schema::hasColumn('labours', 'active_phase_start')) {

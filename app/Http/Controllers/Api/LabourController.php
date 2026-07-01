@@ -70,23 +70,23 @@ class LabourController extends Controller
     }
 
     // Clôturer un accouchement
-    public function close($labourId, Request $request)
-    {
-        $query = Labour::where('id', $labourId);
-        $query = $this->applyVisibilityScope($query, $request);
+    // public function close($labourId, Request $request)
+    // {
+    //     $query = Labour::where('id', $labourId);
+    //     $query = $this->applyVisibilityScope($query, $request);
 
-        $labour = $query->first();
+    //     $labour = $query->first();
 
-        if (! $labour) {
-            return response()->json(['message' => 'Accouchement non trouvé'], 404);
-        }
+    //     if (! $labour) {
+    //         return response()->json(['message' => 'Accouchement non trouvé'], 404);
+    //     }
 
-        $labour->status = 'termine';
-        $labour->end_time = now();
-        $labour->save();
+    //     $labour->status != 'en_cours';
+    //     $labour->end_time = now();
+    //     $labour->save();
 
-        return response()->json(['message' => 'Accouchement clôturé', 'labour' => $labour]);
-    }
+    //     return response()->json(['message' => 'Accouchement clôturé', 'labour' => $labour]);
+    // }
 
     // Accouchement actif d'un patient
     public function active(Patient $patient, Request $request)
@@ -104,40 +104,40 @@ class LabourController extends Controller
     }
 
     // Alertes liées à un accouchement
-    public function alerts($labourId, Request $request)
-    {
-        // ✅ Vérifier que le labour est visible par l'utilisateur avant de montrer ses alertes
-        $labourQuery = Labour::where('id', $labourId);
-        $labourQuery = $this->applyVisibilityScope($labourQuery, $request);
+    // public function alerts($labourId, Request $request)
+    // {
+    //     // ✅ Vérifier que le labour est visible par l'utilisateur avant de montrer ses alertes
+    //     $labourQuery = Labour::where('id', $labourId);
+    //     $labourQuery = $this->applyVisibilityScope($labourQuery, $request);
 
-        if (! $labourQuery->exists()) {
-            return response()->json(['message' => 'Accouchement non trouvé'], 404);
-        }
+    //     if (! $labourQuery->exists()) {
+    //         return response()->json(['message' => 'Accouchement non trouvé'], 404);
+    //     }
 
-        $alerts = Alert::where('labour_id', $labourId)
-            ->orderBy('created_at', 'desc')
-            ->get();
+    //     $alerts = Alert::where('labour_id', $labourId)
+    //         ->orderBy('created_at', 'desc')
+    //         ->get();
 
-        return response()->json(['alerts' => $alerts]);
-    }
+    //     return response()->json(['alerts' => $alerts]);
+    // }
 
     // ✅ Fin d'un labour
-    public function finish(Request $request, $id)
-    {
-        $query = Labour::where('id', $id);
-        $query = $this->applyVisibilityScope($query, $request);
+    // public function finish(Request $request, $id)
+    // {
+    //     $query = Labour::where('id', $id);
+    //     $query = $this->applyVisibilityScope($query, $request);
 
-        $labour = $query->first();
+    //     $labour = $query->first();
 
-        if (! $labour) {
-            return response()->json(['message' => 'Accouchement non trouvé'], 404);
-        }
+    //     if (! $labour) {
+    //         return response()->json(['message' => 'Accouchement non trouvé'], 404);
+    //     }
 
-        $labour->status = $request->status;
-        $labour->save();
+    //     $labour->status = $request->status;
+    //     $labour->save();
 
-        return response()->json($labour);
-    }
+    //     return response()->json($labour);
+    // }
 
 
     //     return response()->json($formatted);
@@ -170,7 +170,6 @@ class LabourController extends Controller
             DATE_FORMAT(start_time, '%Y-%m') as month,
             SUM(CASE WHEN status = 'en_cours' THEN 1 ELSE 0 END) as en_cours,
             SUM(CASE WHEN status = 'refere' THEN 1 ELSE 0 END) as refere,
-            SUM(CASE WHEN status = 'termine' THEN 1 ELSE 0 END) as termine,
             SUM(CASE WHEN status = 'delivery' THEN 1 ELSE 0 END) as delivery,
             SUM(CASE WHEN status = 'death' THEN 1 ELSE 0 END) as death
         ")
@@ -183,7 +182,6 @@ class LabourController extends Controller
             'month' => date('M', strtotime($s->month.'-01')),
             'en_cours' => (int) $s->en_cours,
             'refere' => (int) $s->refere,
-            'termine' => (int) $s->termine,
             'delivery' => (int) $s->delivery,
             'death' => (int) $s->death,
         ];
@@ -208,8 +206,14 @@ public function store(Request $request)
     }
 
     $request->validate([
+        'local_id' => 'nullable|integer',
         'patient_id' => 'required|exists:patients,id',
         'start_time' => 'required|date',
+        'labor_onset' => 'nullable|string',
+        'active_phase_diagnosis_at' => 'nullable|date',
+        'membranes_ruptured' => 'nullable|boolean',
+        'membranes_rupture_at' => 'nullable|date',
+        'membranes_rupture_unknown' => 'nullable|boolean',
     ]);
 
     $existingLabour = Labour::where('patient_id', $request->patient_id)
@@ -270,7 +274,12 @@ public function update(Request $request, $id)
     $validated = $request->validate([
         'start_time' => 'sometimes|date',
         'end_time' => 'nullable|date',
-        'status' => 'sometimes|in:en_cours,termine,refere,delivery,death',
+        'status' => 'sometimes|in:en_cours,refere,delivery,death',
+        'labor_onset' => 'nullable|string',
+        'active_phase_diagnosis_at' => 'nullable|date',
+        'membranes_ruptured' => 'nullable|boolean',
+        'membranes_rupture_at' => 'nullable|date',
+        'membranes_rupture_unknown' => 'nullable|boolean',
     ]);
 
     $labour->update($validated);
