@@ -44,10 +44,7 @@ return new class extends Migration
 
             $table->boolean('membranes_rupture_unknown')->nullable();
 
-
-            if (! Schema::hasColumn('labours', 'active_phase_start')) {
-                $table->dateTime('active_phase_start')->nullable()->after('end_time');
-            }
+            $table->dateTime('active_phase_start')->nullable();
 
             $table->timestamps();
         });

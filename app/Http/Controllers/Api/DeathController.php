@@ -11,6 +11,29 @@ use Illuminate\Support\Facades\Auth;
 
 class DeathController extends Controller
 {
+    public function index(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $query = Death::query();
+
+        if ($user->isSuperviseur()) {
+            $query->where('district', $user->district);
+        } elseif (! $user->isAdmin() && ! $user->isSuperviseurRegional()) {
+            $query->where('user_id', $user->id);
+        }
+
+        $deaths = $query
+            ->orderByDesc('heure_deces')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $deaths,
+        ]);
+    }
+
     private function visibleLabour($labourId)
     {
         /** @var User|null $user */

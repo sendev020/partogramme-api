@@ -97,7 +97,7 @@ class DeliveryController extends Controller
         'uterotonic_type' => 'nullable|string',
         'cord_clamping_time' => 'nullable|string',
         'controlled_cord_traction' => 'nullable|numeric',
-        'uterine_massage' => 'nullable|,numeric',
+        'uterine_massage' => 'nullable|numeric',
         'uterine_tone_checked' => 'nullable|numeric',
         'placenta_complete' => 'nullable|string',
         'estimated_blood_loss_ml' => 'nullable|numeric',

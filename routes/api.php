@@ -21,8 +21,10 @@ use App\Models\User;
 /*
 |--------------------------------------------------------------------------
 | AUTHENTIFICATION (libre)
+    Route::get('/referrals', [ReferralController::class, 'index']);
 |--------------------------------------------------------------------------
 */
+    Route::get('/deaths', [DeathController::class, 'index']);
 Route::post('/login', [AuthController::class, 'login']);
 
 /*

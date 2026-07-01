@@ -11,6 +11,29 @@ use Illuminate\Support\Facades\Auth;
 
 class ReferralController extends Controller
 {
+    public function index(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $query = Referral::query();
+
+        if ($user->isSuperviseur()) {
+            $query->where('district', $user->district);
+        } elseif (! $user->isAdmin() && ! $user->isSuperviseurRegional()) {
+            $query->where('user_id', $user->id);
+        }
+
+        $referrals = $query
+            ->orderByDesc('referral_time')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $referrals,
+        ]);
+    }
+
     private function visibleLabour($labourId)
     {
         /** @var User|null $user */
@@ -59,11 +82,10 @@ class ReferralController extends Controller
         'user_id' => $labour->user_id,
         'district' => $labour->district,
         'poste_de_sante' => $labour->poste_de_sante,
-        'hospital_referred_to' => $labour->hospital_referred_to,
     ]);
 
     $labour->status = 'refere';
-    //$labour->hospital_referred_to = $request->hospital_referred_to;
+    $labour->hospital_referred_to = $validated['hospital'];
     $labour->save();
 
     return response()->json([
