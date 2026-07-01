@@ -13,8 +13,15 @@ class ReferralController extends Controller
 {
     public function index(Request $request)
     {
-        /** @var User $user */
+        /** @var User|null $user */
         $user = Auth::user();
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
 
         $query = Referral::query();
 
@@ -51,8 +58,15 @@ class ReferralController extends Controller
 
     public function store(Request $request)
 {
-    /** @var User $user */
+    /** @var User|null $user */
     $user = Auth::user();
+
+    if (! $user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthenticated',
+        ], 401);
+    }
 
     // ✅ Blocage explicite : superviseur ne peut jamais créer
     if ($user->isAnySuperviseur()) {

@@ -21,10 +21,8 @@ use App\Models\User;
 /*
 |--------------------------------------------------------------------------
 | AUTHENTIFICATION (libre)
-    Route::get('/referrals', [ReferralController::class, 'index']);
 |--------------------------------------------------------------------------
 */
-    Route::get('/deaths', [DeathController::class, 'index']);
 Route::post('/login', [AuthController::class, 'login']);
 
 /*
@@ -129,8 +127,10 @@ Route::middleware('auth:sanctum')->group(function () {
     | REFERRALS / DEATHS / DELIVERIES
     |--------------------------------------------------------------------------
     */
+    Route::get('/referrals', [ReferralController::class, 'index']);
     Route::post('/referrals', [ReferralController::class, 'store']);
 
+    Route::get('/deaths', [DeathController::class, 'index']);
     Route::post('/deaths', [DeathController::class, 'store']);
 
     Route::get('/deliveries', [DeliveryController::class, 'index']);

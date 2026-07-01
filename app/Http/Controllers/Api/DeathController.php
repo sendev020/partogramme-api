@@ -13,8 +13,15 @@ class DeathController extends Controller
 {
     public function index(Request $request)
     {
-        /** @var User $user */
+        /** @var User|null $user */
         $user = Auth::user();
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
 
         $query = Death::query();
 
