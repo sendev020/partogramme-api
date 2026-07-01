@@ -84,6 +84,7 @@ class DeliveryController extends Controller
     }
 
     $validated = $request->validate([
+        'local_id' => 'nullable|integer',
         'labour_id' => 'required|exists:labours,id',
         'voie' => 'required|string',
         'sexe' => 'required|string|in:M,F',
@@ -100,7 +101,6 @@ class DeliveryController extends Controller
         'uterine_tone_checked' => 'nullable|numeric',
         'placenta_complete' => 'nullable|string',
         'estimated_blood_loss_ml' => 'nullable|numeric',
-        'operation' => 'nullable|string',
     ]);
 
     $labour = $this->visibleLabour($validated['labour_id']);
@@ -109,10 +109,26 @@ class DeliveryController extends Controller
     }
 
     $delivery = Delivery::create([
-        ...$validated,
         'user_id' => $labour->user_id,
         'district' => $labour->district,
         'poste_de_sante' => $labour->poste_de_sante,
+        'local_id' => $validated['local_id'] ?? null,
+        'labour_id' => $labour->id,
+        'voie' => $validated['voie'],
+        'sexe' => $validated['sexe'],
+        'poids' => $validated['poids'],
+        'heure_naissance' => $validated['heure_naissance'],
+        'notes' => $validated['notes'] ?? null,
+        'complications' => $validated['complications'] ?? null,
+        'soins_administres' => $validated['soins_administres'],
+        'uterotonic_given' => $validated['uterotonic_given'] ?? null,
+        'uterotonic_type' => $validated['uterotonic_type'] ?? null,
+        'cord_clamping_time' => $validated['cord_clamping_time'] ?? null,
+        'controlled_cord_traction' => $validated['controlled_cord_traction'] ?? null,
+        'uterine_massage' => $validated['uterine_massage'] ?? null,
+        'uterine_tone_checked' => $validated['uterine_tone_checked'] ?? null,
+        'placenta_complete' => $validated['placenta_complete'] ?? null,
+        'estimated_blood_loss_ml' => $validated['estimated_blood_loss_ml'] ?? null,
     ]);
 
     $labour->status = 'delivery';
