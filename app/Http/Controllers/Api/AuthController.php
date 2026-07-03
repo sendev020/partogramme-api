@@ -31,7 +31,7 @@ class AuthController extends Controller
             ], 403);
         }
 
-        //$user->tokens()->delete();
+        $user->tokens()->delete();
         $user->last_login_at = now();
         $user->save();
 
