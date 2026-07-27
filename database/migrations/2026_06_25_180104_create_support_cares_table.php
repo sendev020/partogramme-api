@@ -19,9 +19,28 @@ return new class extends Migration
             $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
 
-            $table->boolean('companion_present')->default(false);
-            $table->boolean('pain_relief')->default(false);
-            $table->boolean('oral_fluids')->default(false);
+            //$table->boolean('companion_present')->default(false);
+            //cet table pain_relief est un booléen qui indique si la patiente a reçu un soulagement de la douleur ou non. Il peut être utilisé pour suivre l'utilisation des méthodes de soulagement de la douleur pendant le travail et pour évaluer l'efficacité de ces méthodes.
+            //$table->boolean('pain_relief')->default(false);
+            //$table->boolean('oral_fluids')->default(false);
+
+            $table->enum('companion_present', [
+                'oui',
+                'non',
+                'refuser',
+            ])->default('non');
+
+            $table->enum('oral_fluids', [
+                'oui',
+                'non',
+                'refuser',
+            ])->default('non');
+
+            $table->enum('pain_relief', [
+                'oui',
+                'non',
+                'refuser',
+            ])->default('non');
 
             $table->string('position')->nullable();
             $table->text('notes')->nullable();

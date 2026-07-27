@@ -21,12 +21,12 @@ class SupportCare extends Model
         'synced',
     ];
 
-    protected $casts = [
-        'companion_present' => 'boolean',
-        'oral_fluids' => 'boolean',
-        'pain_relief' => 'boolean',
-        'recorded_at' => 'datetime',
-    ];
+    // protected $casts = [
+    //     'companion_present' => 'nullable|in:oui,non,refuser',
+    //     'oral_fluids' => 'nullable|in:oui,non,refuser',
+    //     'pain_relief' => 'nullable|in:oui,non,refuser',
+    //     'recorded_at' => 'datetime',
+    // ];
 
     public function labour()
     {

@@ -12,7 +12,6 @@ use App\Http\Controllers\Api\ReferralController;
 use App\Http\Controllers\Api\SupportCareController;
 use App\Http\Controllers\Api\MedicamentController;
 use App\Http\Controllers\Api\UserController;
-//use App\Http\Controllers\Api\DebugController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -160,4 +159,3 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json($postes);
     });
 });
-//Route::get('/debug/check-data', [DebugController::class, 'checkData']);

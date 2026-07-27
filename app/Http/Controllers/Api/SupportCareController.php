@@ -66,10 +66,10 @@ class SupportCareController extends Controller
 
         $validated = $request->validate([
             'labour_id' => 'required|exists:labours,id',
-            'companion_present' => 'boolean',
-            'oral_fluids' => 'boolean',
+            'companion_present' => 'nullable|in:oui,non,refuser',
+            'oral_fluids' => 'nullable|in:oui,non,refuser',
             'position' => 'nullable|string',
-            'pain_relief' => 'boolean',
+            'pain_relief' => 'nullable|in:oui,non,refuser',
             'notes' => 'nullable|string',
             'recorded_at' => 'nullable|date',
         ]);
@@ -112,10 +112,10 @@ class SupportCareController extends Controller
         }
 
         $validated = $request->validate([
-            'companion_present' => 'boolean',
-            'oral_fluids' => 'boolean',
+            'companion_present' => 'nullable|in:oui,non,refuser',
+            'oral_fluids' => 'nullable|in:oui,non,refuser',
             'position' => 'nullable|string',
-            'pain_relief' => 'boolean',
+            'pain_relief' => 'nullable|in:oui,non,refuser',
             'notes' => 'nullable|string',
             'recorded_at' => 'nullable|date',
         ]);
