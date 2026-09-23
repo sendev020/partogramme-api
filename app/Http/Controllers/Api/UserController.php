@@ -54,7 +54,11 @@ class UserController extends Controller
         }
 
         // Vérifier les permissions
-        if (!$user->isAdmin() && $user->district !== $targetUser->district) {
+        if (! $user->isAdmin() && ! $user->isSuperviseur() && ! $user->isSuperviseurRegional()) {
+            return response()->json(['message' => 'Non autorisé'], 403);
+        }
+
+        if ($user->isSuperviseur() && $user->district !== $targetUser->district) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
@@ -104,7 +108,8 @@ class UserController extends Controller
 
             return response()->json($newUser, 201);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Erreur serveur: ' . $e->getMessage()], 500);
+            report($e);
+            return response()->json(['message' => 'Erreur serveur'], 500);
         }
     }
 
@@ -144,9 +149,10 @@ class UserController extends Controller
         }
 
         try {
-            // Ne pas permettre aux non-admins de changer le rôle
-            if (!$authUser->isAdmin() && isset($validated['role'])) {
-                unset($validated['role']);
+            // Un utilisateur peut modifier son profil, mais pas ses droits ni
+            // son périmètre organisationnel. Seul un administrateur peut le faire.
+            if (! $authUser->isAdmin()) {
+                $validated = array_intersect_key($validated, array_flip(['name', 'email', 'password']));
             }
 
             // Hasher le password s'il est fourni
@@ -165,7 +171,8 @@ class UserController extends Controller
 
             return response()->json($targetUser, 200);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Erreur serveur: ' . $e->getMessage()], 500);
+            report($e);
+            return response()->json(['message' => 'Erreur serveur'], 500);
         }
     }
 
@@ -197,7 +204,8 @@ class UserController extends Controller
             $targetUser->delete();
             return response()->json(['message' => 'Utilisateur supprimé avec succès'], 200);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Erreur serveur: ' . $e->getMessage()], 500);
+            report($e);
+            return response()->json(['message' => 'Erreur serveur'], 500);
         }
     }
 }

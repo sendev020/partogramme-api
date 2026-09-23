@@ -10,9 +10,23 @@ use App\Services\AlertService;
 use App\Services\PartographService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ObservationController extends Controller
 {
+    private function recordAudit(int $actorId, Observation $observation, string $action, array $changedFields): void
+    {
+        DB::table('audit_logs')->insert([
+            'actor_user_id' => $actorId,
+            'entity_type' => 'observation',
+            'entity_id' => $observation->id,
+            'action' => $action,
+            'changed_fields' => json_encode(array_values(array_unique($changedFields)), JSON_THROW_ON_ERROR),
+            'occurred_at' => now(),
+            'created_at' => now(),
+        ]);
+    }
+
     private function visibleLabour($labourId)
     {
         /** @var User|null $user */
@@ -51,7 +65,7 @@ class ObservationController extends Controller
             $user = Auth::user();
 
             if (! $user) {
-                return response()->json(['message' => 'DEBUG: utilisateur non authentifié'], 401);
+                return response()->json(['message' => 'Non authentifié'], 401);
             }
 
             if ($user->isAnySuperviseur()) {
@@ -99,7 +113,8 @@ class ObservationController extends Controller
                 return response()->json(['message' => 'Accouchement non trouvé ou non autorisé'], 403);
             }
 
-            $observation = Observation::create([
+            $observation = DB::transaction(function () use ($data, $labour, $user) {
+                $observation = Observation::create([
                 'labour_id' => $data['labour_id'],
                 'user_id' => $labour->user_id,
                 'district' => $labour->district,
@@ -131,20 +146,28 @@ class ObservationController extends Controller
                 'notes' => $data['notes'] ?? null,
                 'observed_at' => $data['observed_at'] ?? now(),
                 'synced' => true,
-            ]);
+                ]);
 
-            try {
+                $this->recordAudit(
+                    $user->id,
+                    $observation,
+                    'created',
+                    array_keys(array_intersect_key($data, array_flip([
+                        'dilation', 'contractions', 'fcf', 'station',
+                        'systolic_bp', 'diastolic_bp', 'temperature', 'pulse',
+                        'amniotic_fluid', 'fetal_heart_deceleration',
+                        'fetal_position', 'caput', 'moulding', 'urines',
+                        'maternal_position', 'oral_fluids', 'iv_fluids',
+                        'oxytocin_ui_per_l', 'oxytocin_drops_per_min',
+                        'analgesia', 'drugs', 'evaluation', 'care_plan',
+                        'companion_present', 'notes',
+                    ]))),
+                );
+
                 AlertService::analyse($labour, $observation->toArray());
                 PartographService::analyse($labour);
-            } catch (\Throwable $e) {
-                return response()->json([
-                    'message' => 'DEBUG ERROR DANS ALERTS',
-                    'error' => $e->getMessage(),
-                    'file' => basename($e->getFile()),
-                    'line' => $e->getLine(),
-                    'observation_id' => $observation->id,
-                ], 500);
-            }
+                return $observation;
+            });
 
             return response()->json([
                 'message' => 'Observation enregistrée',
@@ -152,13 +175,8 @@ class ObservationController extends Controller
                 'local_id' => $data['local_id'] ?? null,
             ], 201);
         } catch (\Throwable $e) {
-            return response()->json([
-                'message' => 'DEBUG ERROR',
-                'error' => $e->getMessage(),
-                'file' => basename($e->getFile()),
-                'line' => $e->getLine(),
-                'trace' => collect($e->getTrace())->take(3)->map(fn ($t) => ($t['file'] ?? '?').':'.($t['line'] ?? '?'))->toArray(),
-            ], 500);
+            report($e);
+            return response()->json(['message' => 'Erreur lors de l’enregistrement de l’observation'], 500);
         }
     }
 
@@ -182,7 +200,7 @@ class ObservationController extends Controller
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'dilation' => 'nullable|numeric',
             'fcf' => 'nullable|integer',
             'contractions' => 'nullable|integer',
@@ -211,19 +229,25 @@ class ObservationController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $obs->update($request->all());
-
         try {
+            DB::transaction(function () use ($obs, $validated, $labour, $user) {
+                $before = $obs->only(array_keys($validated));
+                $obs->fill($validated);
+                $changedFields = array_keys(array_filter(
+                    $validated,
+                    fn ($value, $key) => ($before[$key] ?? null) != $value,
+                    ARRAY_FILTER_USE_BOTH,
+                ));
+                $obs->save();
+                if ($changedFields !== []) {
+                    $this->recordAudit($user->id, $obs, 'updated', $changedFields);
+                }
             AlertService::analyse($labour, $obs->toArray());
             PartographService::analyse($labour);
+            });
         } catch (\Throwable $e) {
-            return response()->json([
-                'message' => 'DEBUG ERROR DANS ALERTS',
-                'error' => $e->getMessage(),
-                'file' => basename($e->getFile()),
-                'line' => $e->getLine(),
-                'observation_id' => $obs->id,
-            ], 500);
+            report($e);
+            return response()->json(['message' => 'Erreur lors du traitement de l’observation'], 500);
         }
 
         return response()->json($obs);
@@ -243,7 +267,10 @@ class ObservationController extends Controller
         }
 
         $observation = Observation::findOrFail($id);
-        $observation->delete();
+        DB::transaction(function () use ($observation, $user) {
+            $observation->delete();
+            $this->recordAudit($user->id, $observation, 'deleted', ['deleted_at']);
+        });
 
         return response()->json(['message' => 'Observation supprimée']);
     }

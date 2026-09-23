@@ -542,12 +542,26 @@ class LabourController extends Controller
             return response()->json(['message' => 'Les administrateurs ne peuvent pas créer de labour'], 403);
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'patient_id' => 'required|exists:patients,id',
             'start_time' => 'required|date',
+            'labor_onset' => 'nullable|in:spontane,induit',
+            'active_phase_diagnosis_at' => 'nullable|date',
+            'membranes_ruptured' => 'nullable|boolean',
+            'membranes_rupture_at' => 'nullable|date',
+            'membranes_rupture_unknown' => 'nullable|boolean',
         ]);
 
-        $existingLabour = Labour::where('patient_id', $request->patient_id)
+        // A valid patient ID is not sufficient: prevent creating a labour
+        // attached to another clinician's patient (IDOR / data reassignment).
+        $patient = Patient::where('id', $validated['patient_id'])
+            ->where('user_id', $user->id)
+            ->first();
+        if (! $patient) {
+            return response()->json(['message' => 'Patiente non trouvée ou non autorisée'], 404);
+        }
+
+        $existingLabour = Labour::where('patient_id', $patient->id)
             ->where('status', 'en_cours')
             ->first();
 
@@ -559,18 +573,18 @@ class LabourController extends Controller
         }
 
         $labour = Labour::create([
-            'patient_id'                 => $request->patient_id,
+            'patient_id'                 => $patient->id,
             'user_id'                    => $user->id,
             'district'                   => $user->district,
             'poste_de_sante'             => $user->poste_de_sante,
             'start_time'                 => $request->start_time,
             'status'                     => 'en_cours',
             // 📋 Section 1 du Guide OMS — présents dès la création
-            'labor_onset'                => $request->labor_onset,
-            'active_phase_diagnosis_at'  => $request->active_phase_diagnosis_at,
-            'membranes_ruptured'         => $request->membranes_ruptured,
-            'membranes_rupture_at'       => $request->membranes_rupture_at,
-            'membranes_rupture_unknown'  => $request->membranes_rupture_unknown,
+            'labor_onset'                => $validated['labor_onset'] ?? null,
+            'active_phase_diagnosis_at'  => $validated['active_phase_diagnosis_at'] ?? null,
+            'membranes_ruptured'         => $validated['membranes_ruptured'] ?? null,
+            'membranes_rupture_at'       => $validated['membranes_rupture_at'] ?? null,
+            'membranes_rupture_unknown'  => $validated['membranes_rupture_unknown'] ?? null,
         ]);
 
         return response()->json($labour, 201);
@@ -698,4 +712,3 @@ class LabourController extends Controller
         return response()->json($labours);
     }
 }
-
